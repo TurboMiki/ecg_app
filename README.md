@@ -59,6 +59,7 @@ Struktura projektu wygląda następująco:
 
 ### **Folder główny: `ecg_app/`**
 #### **`build/`**  
+- Tego filderu możecie nie mieć na swoim branchu, ponieważ każdy musi go sobie samemu zrobić (proszę też sprawdzić czy znajduje się on w `.gitignore`) 
 - Zawiera pliki generowane przez CMake.  
 - Znajduje się tu również plik wykonywalny (exec) generowany w wyniku kompilacji.  
 - Nazwa pliku zależy od ustawień w `CMakeLists.txt`, w segmencie:  
@@ -103,6 +104,51 @@ Poniżej znajduje się diagram przedstawiający strukturę klas:
 
 ---
 
-### **Dziękujemy za użycie ECG App! 🎉**
+## **Testy**
+- Testy należy tworzyć w folderze `tests/`
+- Aby wykonac test należy:
+    - Stworzyć test i dodać go do `CMakeLists.txt` podobnie jak jest to zrobione dla `test_signal.cpp`
+    - Zbudować aplikacje [Budowanie aplikacji](#Budowanie-Aplikacji)
+    - Odpalić test
+
+---
+
+## **Budowanie Aplikacji**
+Niestety w C/C++ aby program działał należy go najpierw skompilować. Robi się to całkiem skomplikowane kiedy mamy do czynienia z armią plików. Tutaj z pomoca przychodzi nam Cmake. Aby zbudować aplikację należy:
+- Wejść do folderu build:
+    ```bash
+    cd build
+    ```
+- Następnie zbudować aplikację:
+    ```bash
+    cmake ..
+    ```
+- Potem zbudować testy:
+    ```bash
+    cmake --build . --target nazwa_twojego_testu
+    ```
+- I na końcu przetestować moduł:
+    ```bash
+    ctest
+    ```
+
+---
+
+## **Git oraz GitHub**
+Moi drodzy, kilka zasad odnośnie Githuba:
+- Pierwsza rzecz którą **obowiązkowo** każdy ma zrobić to sprawdzić czy jesteście na swoim `branchu`. Jesli nie:
+    ```bash
+    git checkout branch-name
+    ```
+- Następną **obowiązkową** rzeczą jest fetchowanie zmian z `maina`:
+    ```bash
+    git merge main
+    ```
+- **Pod żadnym pozorem** proszę nie robić commitów na `main`.
+- Proszę też nie robić merga na `maina` ze swojego brancha - tym zajmiemy się razem z Witkiem.
+
+---
+
+### **Dziękujemy za pracę nad ECG App! 🎉**
 
 ---
