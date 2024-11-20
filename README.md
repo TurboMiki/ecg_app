@@ -136,16 +136,16 @@ Niestety w C/C++ aby program działał należy go najpierw skompilować. Robi si
 
 ## **Git oraz GitHub**
 Moi drodzy, kilka zasad odnośnie Githuba:
-- Pierwsza rzecz którą **obowiązkowo** każdy ma zrobić to sprawdzić czy jesteście na swoim `branchu`. Jesli nie:
+- ⚠️ Pierwsza rzecz którą **obowiązkowo** każdy ma zrobić to sprawdzić czy jesteście na swoim `branchu`. Jesli nie:
     ```bash
     git checkout branch-name
     ```
-- Następną **obowiązkową** rzeczą jest fetchowanie zmian z `maina`:
+- ⚠️ Następną **obowiązkową** rzeczą jest fetchowanie zmian z `maina`:
     ```bash
     git merge main
     ```
-- **Pod żadnym pozorem** proszę nie robić commitów na `main`.
-- Proszę też nie robić merga na `maina` ze swojego brancha - tym zajmiemy się razem z Witkiem.
+- ❌ **Pod żadnym pozorem** proszę nie robić commitów na `main`.
+- ❌ Proszę też nie robić merga na `maina` ze swojego brancha - tym zajmiemy się razem z Witkiem.
 
 ---
 
