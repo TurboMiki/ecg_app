@@ -1,20 +1,20 @@
 #pragma once
-#include <string>
+#include <memory>
+#include <stdexcept>
+#include "Signal.h"
 #include "Filter.h"
 
 class Baseline {
 private:
     Signal outSignal;
-    Filter filter;
-    std::string filterType;
+    std::unique_ptr<Filter> filter;
 
 public:
     Baseline();
     ~Baseline();
 
-    void setFilterType(const std::string& type);
-
+    void setFilter(std::unique_ptr<Filter> newFilter);
     Signal filterSignal(const Signal& inputSignal);
-
     Signal getSignal() const;
 };
+
