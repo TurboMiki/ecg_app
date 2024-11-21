@@ -149,6 +149,12 @@ Moi drodzy, kilka zasad odnośnie Githuba:
 
 ---
 
+## **Klasa Signal**
+Jak przyjrzycie się deklaracji/definicji klasy Signal to zobaczycie że posiada ona metodę `getTestVectors()` która zwraca sinusa. Jeśli do czegoś wam się to przyda to śmiało możecie ją wykorzystywać.
+Oczywiście zachęcam do tworzenia swoich własnych danych testowych - przydadzą Wam się.
+
+---
+
 ### **Dziękujemy za pracę nad ECG App! 🎉**
 
 ---
