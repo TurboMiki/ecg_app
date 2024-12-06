@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(ECGProcessing LANGUAGES CXX)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -29,8 +33,8 @@ target_include_directories(ecg_app PUBLIC
 )
 
 # Znalezienie Qt
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-target_link_libraries(ecg_app Qt5::Widgets)
+find_package(Qt6 COMPONENTS Widgets REQUIRED)
+target_link_libraries(ecg_app Qt6::Widgets)
 
 # Plik wykonywalny
 add_executable(ECGProcessing main.cpp)
@@ -49,7 +53,7 @@ enable_testing()
 
 # Testy
 add_executable(test_signal tests/test_signal.cpp)
-target_link_libraries(test_signal PRIVATE gtest gtest_main ecg_app Qt5::Widgets)
+target_link_libraries(test_signal PRIVATE gtest gtest_main ecg_app Qt6::Widgets)
 
 include(GoogleTest)
 gtest_discover_tests(test_signal)
