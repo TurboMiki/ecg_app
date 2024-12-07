@@ -26,7 +26,7 @@ class DataReader {
     vector<char> buffer;
 
     void insert_data_to_subsets();
-    static int16_t change_if_negative(int16_t input);
+    int16_t change_if_negative(int16_t input);
 
     public:
     DataReader(string file_path, float conv_factor = 20.0);
