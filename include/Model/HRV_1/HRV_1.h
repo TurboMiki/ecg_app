@@ -12,6 +12,8 @@ public:
 private:
     double calculateRMSSD(const std::vector<double>& nnIntervals) const;
     double calculateSDNN(const std::vector<double>& nnIntervals) const;
+    double calculateNN50(const std::vector<double>& nnIntervals) const;
+    double calculatepNN50(const std::vector<double>& nnIntervals, double nn50) const;
     std::array<float, 5> timeParams_;
     std::array<float, 6> freqParams_;
 };
