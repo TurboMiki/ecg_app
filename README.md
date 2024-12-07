@@ -6,6 +6,7 @@
 
 ## **Witam wszystkich! 👋**  
 W tym pliku znajdziecie wszystkie potrzebne informacje oraz instrukcje.  
+W razie <span style="color: #82e332"><strong>problemów</strong></span> bądź jakichkolwiek <span style="color: #eec634"><strong>pytań/nieścisłości</strong></span> prosze pisać do mnie lub Witka na priv.
 
 ---
 
@@ -49,6 +50,9 @@ Zweryfikuj instalację:
 ```bash
 cmake --version  
 ```  
+
+Nastepnie, jeśli będziesz korzystać ze stworzonego przez mnie pliku `CMakeLists.txt` musisz ustawić zmienną środowiskową *`QT_PATH`* która będzie wskazywać na miejsce instalacji biblioteki *QT*.
+W moim przypadku (WSL) jest to `/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6`. 
 
 **Gratulacje! 🎉 Środowisko gotowe!**  
 
@@ -94,10 +98,15 @@ Struktura projektu wygląda następująco:
     - Pliki źródłowe  
     - Ustawienia kompilatora  
     - Biblioteki używane w aplikacji  
-
+    - Ścieżkę do miejsca instalacji biblioteki QT
 ---
 
 ## **Struktura klas**
+
+<span style="color: #fc187c;"><strong>❗Proszę obowiązkowo zapoznać się z tym diagramem:❗</strong></span>
+- Co ma znajdować się w klasie
+- Jakie typy zmiennych ma zawierać/przyjmować/zwracać klasa
+
 Poniżej znajduje się diagram przedstawiający strukturę klas:  
 
 ![Diagram klas](<Screenshot 2024-11-19 224122.png>)  

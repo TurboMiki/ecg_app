@@ -11,7 +11,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Ustawienie ścieżki do Qt
-set(Qt6_DIR "/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6")
+set(Qt6_DIR $ENV{QT_PATH})
+find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QT_PATH})
+
+set(CMAKE_AUTOMOC ON)
 
 # Zdefiniowanie źródeł
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
@@ -19,17 +22,26 @@ message(STATUS "Source files found: ${SOURCES}")
 
 # Biblioteka statyczna
 add_library(ecg_app STATIC ${SOURCES})
+
+# Explicitly include necessary directories
 target_include_directories(ecg_app PUBLIC 
-    include 
-    include/Baseline 
-    include/DataReader 
-    include/HRV_1
-    include/HRV_2 
-    include/HRV_DFA 
-    include/HeartClass 
-    include/RPeaks 
-    include/Signal 
-    include/Waves
+    include
+    include/Model
+    include/Model/Baseline
+    include/Model/HRV_1
+    include/Model/HRV_2
+    include/Model/HRV_DFA
+    include/Model/DataReader
+    include/Model/RPeaks
+    include/Model/Signal
+    include/Model/Waves
+    include/Model/HeartClass
+
+    include/View
+    include/View/MainWindow
+
+    include/ViewModel
+    
 )
 
 # Znalezienie Qt
