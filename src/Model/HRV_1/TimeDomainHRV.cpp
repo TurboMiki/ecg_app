@@ -1,7 +1,6 @@
 #include "TimeDomainHRV.h"
 #include <cmath>
 
-
 // set intervals, class contructor
 TimeDomainHRV::TimeDomainHRV(const Signal& rpeaks) : RRIntervals(rpeaks) {}
 
