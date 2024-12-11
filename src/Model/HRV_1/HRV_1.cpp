@@ -13,11 +13,27 @@ void HRV_1::process(){
     double nn50 = calculateNN50();              //4. NN50  - Pair of neighbours RR with more than 50 distance
     double pnn50 = calculatepNN50(nn50);        //5. pNN50 - percent of NN50 compared to all RR intervals
 
+
     timeParams_[0] = meanRR; 
     timeParams_[1] = sdnn;
     timeParams_[2] = rmssd;
     timeParams_[3] = nn50;
     timeParams_[4] = pnn50;
+
+    //frequency parameters
+    double hf = calculateHF();
+    double lf = calculateLF();
+    double vlf = calculateVLF();
+    double ulf = calculateULF();
+    double tf = calculateTF();
+    double lfhf = calculateLFHF();
+
+    freqParams_[0] = hf;
+    freqParams_[1] = lf;
+    freqParams_[2] = vlf;
+    freqParams_[3] = ulf;
+    freqParams_[4] = tf;
+    freqParams_[5] = lfhf;
 
 }
 

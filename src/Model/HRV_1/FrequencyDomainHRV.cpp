@@ -34,7 +34,7 @@
 
   double FrequencyDomainHRV::calculateULF() const{
         double min = 0.0;
-        double Max = 0.0033;   
+        double max = 0.0033;   
 
         return calculatePower(min,max);   
  }
@@ -51,7 +51,7 @@
         double hfPower = calculateHF();
 
         if(hfPower != 0){
-            return lfpower/hfpower;
+            return calculateLF()/calculateHF();
         } else{
             return 0;
         }
@@ -64,6 +64,6 @@
                 power += periodogram_[i] * (frequencies_[i+1] - frequencies_[i]);
             }
         }
-    return power
+    return power;
 }
 

@@ -6,7 +6,8 @@ RRIntervals::RRIntervals(const Signal& rpeaks) {
 }
 
 void RRIntervals::calculateIntervals(const Signal& rpeaks){
-        for (size_t i = 0; i < rpeaks.size() - 1; ++i) {
-            nnIntervals_.push_back(rpeaks[i + 1] - rpeaks[i]);
+        std::vector<double> x = rpeaks.getx();
+        for (size_t i = 0; i < x.size() - 1; ++i) {
+            nnIntervals_.push_back(x[i + 1] - x[i]);
         }
 }

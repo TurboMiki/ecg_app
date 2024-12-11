@@ -57,6 +57,4 @@ void LombScarglePeriodogram::calculatePeriodogramLS(const Signal& ecg){
 
         periodogram_[i] = (SS * YC * YC + CC * YS * YS - 2.0 * CS * YC * YS) / (YY * D);
     }
-
-
 }

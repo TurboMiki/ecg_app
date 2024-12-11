@@ -11,3 +11,4 @@ class LombScarglePeriodogram{
     private:
         void calculatePeriodogramLS(const Signal& ecg);
 };
+
