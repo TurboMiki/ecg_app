@@ -31,8 +31,15 @@ void DataReader::insert_data_to_subsets() {
     }
 }
 
-DataReader::DataReader(string file_path, float conv_factor)
-: file_path(file_path), conv_factor(conv_factor) {
+void DataReader::load_time() {
+    int len_data = dataMLII.size();
+    for (double tick = 0; tick < (1/sample_rate) * (len_data - 1); tick = tick + 1/sample_rate) {
+        time.push_back(tick);
+    }
+}
+
+DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
+: file_path(file_path), conv_factor(conv_factor), sample_rate(sample_rate) {
     input_file.open(file_path, ios::in | ios::binary);
 
     input_file.seekg(0, ios::end);
@@ -50,6 +57,7 @@ DataReader::DataReader(string file_path, float conv_factor)
     byteidx = 0;
 
     insert_data_to_subsets();
+    load_time();
 }
 
 DataReader::~DataReader() {
@@ -86,6 +94,23 @@ void DataReader::write_V(int samples) {
     cout << "Here are first " << samples << " samples: " << endl;
     for(int i = 0; i < samples; i++) {
         cout << dataV[i] << " ";
+    }
+    cout << endl;
+}
+
+void DataReader::write_time(int samples) {
+    cout << "Time ticks: " << endl;
+    cout << "Time size: " << time.size() << endl;
+    if(samples == -1) {
+        cout << "Here are all samples: " << endl;
+        for(int i = 0; i < time.size(); i++) {
+            cout << time[i] << " ";
+        }
+        cout << endl;
+    }
+    cout << "Here are the first " << samples << " samples: " << endl;
+    for(int i = 0; i < samples; i++) {
+        cout << time[i] << " ";
     }
     cout << endl;
 }
