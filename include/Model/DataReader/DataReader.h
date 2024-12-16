@@ -22,9 +22,11 @@ class DataReader {
     int bitpose, bytepos, bit_in_byte;
     int bitidx, byteidx;
 
-    vector<double> dataMLII;
-    vector<double> dataV;
-    vector<double> time;
+    Signal dataMLII;
+    Signal dataV;
+    vector<double> dataMLII_vec;
+    vector<double> dataV_vec;
+    vector<double>  time;
     vector<char> buffer;
 
     void insert_data_to_subsets();
@@ -35,21 +37,17 @@ class DataReader {
     DataReader(string file_path, double conv_factor = 20.0, double sample_rate = 360.0);
     ~DataReader();
 
-    vector<double> read_MLII();
-    vector<double> read_V();
-    vector<double> read_time();
+    Signal read_MLII();
+    Signal read_V();
 
     void write_MLII(int samples = -1);
     void write_V(int samples = -1);
     void write_time(int samples = -1);
 };
 
-inline vector<double> DataReader::read_MLII() {
+inline Signal DataReader::read_MLII() {
     return dataMLII;
 }
-inline vector<double> DataReader::read_V() {
+inline Signal DataReader::read_V() {
     return dataV;
-}
-inline vector<double> DataReader::read_time() {
-    return time;
 }

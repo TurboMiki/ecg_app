@@ -23,16 +23,16 @@ void DataReader::insert_data_to_subsets() {
             value = change_if_negative(value);
         bitpose += bitsize;
         if (bit_in_byte) {
-            dataMLII.push_back(value / conv_factor);
+            dataMLII_vec.push_back(value / conv_factor);
         }
         else {
-            dataV.push_back(value / conv_factor);
+            dataV_vec.push_back(value / conv_factor);
         }
     }
 }
 
 void DataReader::load_time() {
-    int len_data = dataMLII.size();
+    int len_data = dataMLII_vec.size();
     for (double tick = 0; tick < (1/sample_rate) * (len_data - 1); tick = tick + 1/sample_rate) {
         time.push_back(tick);
     }
@@ -58,6 +58,14 @@ DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
 
     insert_data_to_subsets();
     load_time();
+
+    dataMLII.setX(time);
+    dataMLII.setY(dataMLII_vec);
+    dataMLII.setSamplingRate(sample_rate);
+
+    dataV.setX(time);
+    dataV.setY(dataV_vec);
+    dataV.setSamplingRate(sample_rate);
 }
 
 DataReader::~DataReader() {
@@ -66,34 +74,34 @@ DataReader::~DataReader() {
 
 void DataReader::write_MLII(int samples) {
     cout << "Canal MLII: " << endl;
-    cout << "Data size: " << dataMLII.size() << endl;
+    cout << "Data size: " << dataMLII_vec.size() << endl;
     if(samples == -1) {
         cout << "Here are all samples: " << endl;
-        for(int i = 0; i < dataMLII.size(); i++) {
-            cout << dataMLII[i] << " ";
+        for(int i = 0; i < dataMLII_vec.size(); i++) {
+            cout << dataMLII_vec[i] << " ";
         }
         cout << endl;
     }
     cout << "Here are first " << samples << " samples: " << endl;
     for(int i = 0; i < samples; i++) {
-        cout << dataMLII[i] << " ";
+        cout << dataMLII_vec[i] << " ";
     }
     cout << endl;
 }
 
 void DataReader::write_V(int samples) {
     cout << "Canal V: " << endl;
-    cout << "Data size: " << dataV.size() << endl;
+    cout << "Data size: " << dataV_vec.size() << endl;
     if(samples == -1) {
         cout << "Here are all samples: " << endl;
-        for(int i = 0; i < dataV.size(); i++) {
-            cout << dataV[i] << " ";
+        for(int i = 0; i < dataV_vec.size(); i++) {
+            cout << dataV_vec[i] << " ";
         }
         cout << endl;
     }
     cout << "Here are first " << samples << " samples: " << endl;
     for(int i = 0; i < samples; i++) {
-        cout << dataV[i] << " ";
+        cout << dataV_vec[i] << " ";
     }
     cout << endl;
 }
