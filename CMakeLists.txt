@@ -11,7 +11,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Ustawienie ścieżki do Qt
-#set(Qt6_DIR "/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6")
+set(Qt6_DIR $ENV{QT_PATH})
+find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QT_PATH})
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 # Zdefiniowanie źródeł
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
