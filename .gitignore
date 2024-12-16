@@ -3,4 +3,3 @@ cmake*
 .idea
 .vscode
 CMakeLists.txt.user
-main.py
