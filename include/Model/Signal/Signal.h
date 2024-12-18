@@ -14,6 +14,19 @@ public:
     int getSize() const { return N_; }
     int getSamplingRate() const { return samplingRate_; }
 
+    void setX(const std::vector<double>& x) {
+        x_ = x;
+        N_ = x_.size(); 
+    }
+
+    void setY(const std::vector<double>& y) {
+        y_ = y;
+    }
+
+    void setSamplingRate(int samplingRate) {
+        samplingRate_ = samplingRate;
+    }
+
     static Signal getTestVectors();
 
 private:
