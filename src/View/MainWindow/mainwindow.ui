@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>279</width>
-    <height>148</height>
+    <width>347</width>
+    <height>207</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -63,9 +63,12 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>279</width>
+     <width>347</width>
      <height>19</height>
     </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
