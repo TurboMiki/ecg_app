@@ -22,6 +22,11 @@ void MainWindow::on_clickButton_1_clicked()
         ui->progressBar_1->setValue(i);
         qApp->processEvents(QEventLoop::AllEvents);
     }
-    QMessageBox::about(this, "Message","Loading concluded. Please get to work !");
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle("Message");
+    msgBox.setText("Loading concluded. Please get to work!");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setStyleSheet("QMessageBox { border: 2px solid black; }"); // Add a border
+    msgBox.exec();
 }
 
