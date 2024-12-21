@@ -7,7 +7,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->progressBar_1->setMaximum(200);
+    //Icon
+    ui->START->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/play.png"));
+    ui->Config->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/gear.png"));
 }
 
 MainWindow::~MainWindow()
@@ -15,18 +17,33 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_clickButton_1_clicked()
+void MainWindow::on_pushButton_clicked()
 {
-    for (int i=0; i<=ui->progressBar_1->maximum(); i++){
-        QThread::msleep(20);
-        ui->progressBar_1->setValue(i);
-        qApp->processEvents(QEventLoop::AllEvents);
-    }
-    QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Message");
-    msgBox.setText("Loading concluded. Please get to work!");
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setStyleSheet("QMessageBox { border: 2px solid black; }"); // Add a border
-    msgBox.exec();
+    ui->START->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/play_push.png"));
+}
+
+
+void MainWindow::on_pushButton_pressed()
+{
+    ui->START->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/play_push.png"));
+}
+
+void MainWindow::on_START_clicked(bool)
+{
+
+}
+void MainWindow::on_START_clicked()
+{
+
+}
+
+void MainWindow::on_Config_clicked()
+{
+
+}
+
+void MainWindow::on_pushButton_6_clicked()
+{
+
 }
 
