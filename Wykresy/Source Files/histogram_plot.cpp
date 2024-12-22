@@ -14,9 +14,6 @@ Histogram_Plot::Histogram_Plot(QWidget *parent)
     bars->setBrush(QBrush(Qt::blue));  // Kolor wypełnienia słupków
     bars->setWidth(0.9);  // Zmniejszenie szerokości słupków, aby były bliżej siebie
 
-    // Ustawienia osi
-    customPlot->xAxis->setLabel("Bin");
-    customPlot->yAxis->setLabel("Ilość wystąpień");
 
     // Włączenie legendy
     customPlot->legend->setVisible(true);
@@ -47,7 +44,7 @@ void Histogram_Plot::setTitle(const QString& title)
     customPlot->plotLayout()->addElement(0, 0, titleElement);
 }
 
-void Histogram_Plot::updateHistogramPlot(const Signal& signal, const QString& title)
+void Histogram_Plot::updateHistogramPlot(const Signal& signal, const QString& title, const QString& legend, const QString& xtitle, const QString& ytitle)
 {
     QVector<double> x, y;
 
@@ -61,7 +58,6 @@ void Histogram_Plot::updateHistogramPlot(const Signal& signal, const QString& ti
     }
 
     bars->setData(x, y);  // Ustawienie danych dla słupków
-    bars->setName(title); // Ustawienie nazwy wykresu
 
     // Ustawienie zakresu dla osi Y (aby unikać wartości ujemnych)
     double minY = *std::min_element(y.begin(), y.end());
@@ -73,6 +69,10 @@ void Histogram_Plot::updateHistogramPlot(const Signal& signal, const QString& ti
     // Ustawiamy minimalny zakres na 0, aby unikać wartości ujemnych
     customPlot->yAxis->setRange(std::max(0.0, minY - 0.1), maxY + 5);
     customPlot->xAxis->setRange(std::max(0.0, minX - 0.1), maxX + 1);
+
+    customPlot->xAxis->setLabel(xtitle);
+    customPlot->yAxis->setLabel(ytitle);
+    bars->setName(legend);
 
     // Ustawienie tytułu wykresu
     setTitle(title);

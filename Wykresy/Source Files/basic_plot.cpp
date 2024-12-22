@@ -10,8 +10,7 @@ Basic_Plot::Basic_Plot(QWidget *parent)
     customPlot->addGraph();
     customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::blue, 1));
     customPlot->graph(0)->setLineStyle(QCPGraph::lsLine);
-    customPlot->xAxis->setLabel("Czas [s]");
-    customPlot->yAxis->setLabel("Amplituda [mV]");
+
 
     // Włączenie legendy
     customPlot->legend->setVisible(true);
@@ -40,7 +39,7 @@ void Basic_Plot::setTitle(const QString& title)
     customPlot->plotLayout()->addElement(0, 0, titleElement);
 }
 
-void Basic_Plot::updateBasicPlot(const Signal& signal, int highlightIndex, const QString& title)
+void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices,const QString& legend , const QString& title, const QString& xtitle, const QString& ytitle)
 {
     QVector<double> x, y;
     for (double value : signal.getX()) {
@@ -55,23 +54,32 @@ void Basic_Plot::updateBasicPlot(const Signal& signal, int highlightIndex, const
     customPlot->addGraph();     // Dodanie nowego wykresu
     customPlot->graph(0)->setData(x, y);  // Ustawienie danych
     customPlot->graph(0)->setName(title); // Ustawienie nazwy wykresu
+    customPlot->xAxis->setLabel(xtitle);
+    customPlot->yAxis->setLabel(ytitle);
 
     double minY = *std::min_element(y.begin(), y.end());
     double maxY = *std::max_element(y.begin(), y.end());
     customPlot->yAxis->setRange(minY - 0.1, maxY + 0.1);
 
-    if (highlightIndex >= 0 && highlightIndex < x.size()) {
+    if (!highlightIndices.isEmpty()) {
         // Jeśli wykres do wyróżnienia nie istnieje, dodaj go
         if (customPlot->graphCount() < 2) {
             customPlot->addGraph();
-            customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::red, 10));  // Czerwone kółko
+            customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::red, 10));
+            customPlot->graph(1)->setLineStyle(QCPGraph::lsNone);            // Czerwone kółka
         }
 
-        // Nadpisanie danych wykresu wyróżnionego punktu
-        customPlot->graph(1)->setData(x.mid(highlightIndex, 1), y.mid(highlightIndex, 1));  // Ustawienie tylko wyróżnionego punktu
-        customPlot->graph(1)->setName("Wyróżniony punkt");
-    }
+        QVector<double> highlightX, highlightY;
+        for (int index : highlightIndices) {
+            if (index >= 0 && index < x.size()) {
+                highlightX.append(x[index]);
+                highlightY.append(y[index]);
+            }
+        }
 
+        customPlot->graph(1)->setData(highlightX, highlightY);  // Ustawienie wyróżnionych punktów
+        customPlot->graph(1)->setName(legend);
+    }
 
     setTitle(title);  // Ustawienie tytułu wykresu
     customPlot->replot();  // Rysowanie wykresu

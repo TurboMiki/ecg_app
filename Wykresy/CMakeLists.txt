@@ -33,6 +33,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         basic_plot.h basic_plot.cpp
         table.h table.cpp
         histogram_plot.h histogram_plot.cpp
+        waves_plot.h waves_plot.cpp
 
     )
 # Define target properties for Android with Qt 6 as:

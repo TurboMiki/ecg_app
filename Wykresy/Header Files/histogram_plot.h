@@ -13,7 +13,7 @@ public:
     ~Histogram_Plot();
 
     void setTitle(const QString& title);
-    void updateHistogramPlot(const Signal& signal, const QString& title);
+    void updateHistogramPlot(const Signal& signal, const QString& title,const QString& legend ,const QString& xtitle, const QString& ytitle);
 
 private:
     QCustomPlot *customPlot;  // Obiekt QCustomPlot

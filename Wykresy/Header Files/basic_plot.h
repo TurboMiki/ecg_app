@@ -14,7 +14,7 @@ public:
     ~Basic_Plot();
 
     void setTitle(const QString& title);  // Ustawienie tytułu wykresu
-    void updateBasicPlot(const Signal& signal, int highlightIndex, const QString& title);  // Metoda do rysowania danych
+    void updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices,const QString& legend , const QString& title, const QString& xtitle, const QString& ytitle);  // Metoda do rysowania danych
 
     // Metoda zwracająca widget QCustomPlot (można używać do dalszej konfiguracji wykresu)
     QCustomPlot* getCustomPlot() const { return customPlot; }
