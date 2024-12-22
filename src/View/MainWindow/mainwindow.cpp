@@ -8,8 +8,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     //Icon
-    ui->START->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/play.png"));
-    ui->Config->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/gear.png"));
+    ui->START->setIcon(QIcon("/home/miki/vcs_projects/dadm_app/ecg_app/src/View/MainWindow/icons/play.png"));
+    ui->Config->setIcon(QIcon("/home/miki/vcs_projects/dadm_app/ecg_app/src/View/MainWindow/icons/gear.png"));
 }
 
 MainWindow::~MainWindow()
