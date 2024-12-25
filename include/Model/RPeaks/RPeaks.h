@@ -16,14 +16,16 @@ public:
      * @brief Default constructor initializing default parameters.
      */
     RPeaks();
-
+    
     /**
      * @brief Sets parameters for the detection method.
      * @param method The detection method ("PAN_TOMPKINS" or "HILBERT").
      * @param window_size Window size for the Pan-Tompkins method (default: 0).
      * @param threshold Threshold for the Pan-Tompkins method (default: 0.0).
+     * @param proximity Proximity for the Hilbert method (optional).
      */
-    void setParams(const std::string& method, int window_size = 0, double threshold = 0.0);
+    void setParams(const std::string& method, int window_size = 0, double threshold = 0.0, int proximity = 0);
+
 
     /**
      * @brief Detects R-peaks in the input signal.
@@ -34,12 +36,15 @@ public:
      */
     bool detectRPeaks(const std::vector<double>& signal, double signal_frequency, std::vector<int>& r_peaks);
 
+
 private:
     // Detection parameters
     std::string detection_method;          ///< Detection method to use.
     int pan_tompkins_window_length;        ///< Window size for Pan-Tompkins method.
     double pan_tompkins_threshold;         ///< Threshold for Pan-Tompkins method.
     bool custom_parameters;                ///< Flag to check if custom parameters are set.
+    int hilbert_proximity; ///< Proximity dla Hilberta, ustawiany przez użytkownika lub domyślny
+    bool hilbert_custom_proximity; ///< Flaga sprawdzająca, czy proximity zostało ustawione
 
     // Hilbert transform helper functions
     /**

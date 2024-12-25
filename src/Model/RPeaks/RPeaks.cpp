@@ -7,14 +7,21 @@
 
 // Konstruktor klasy
 RPeaks::RPeaks()
-    : detection_method("HILBERT"), pan_tompkins_window_length(0), pan_tompkins_threshold(0.0), custom_parameters(false) {}
-
+    : detection_method("HILBERT"), pan_tompkins_window_length(0), pan_tompkins_threshold(0.0),
+      custom_parameters(false), hilbert_proximity(0), hilbert_custom_proximity(false) {}
+      
+      
 // Ustawienie parametrów detekcji
-void RPeaks::setParams(const std::string& method, int window_size, double threshold) {
+void RPeaks::setParams(const std::string& method, int window_size, double threshold, int proximity) {
     detection_method = method;
     pan_tompkins_window_length = window_size;
     pan_tompkins_threshold = threshold;
     custom_parameters = true;
+
+    if (method == "HILBERT" && proximity > 0) {
+        hilbert_proximity = proximity;
+        hilbert_custom_proximity = true;
+    }
 }
 
 // Główna funkcja detekcji załamków R
@@ -151,7 +158,7 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
 
     // Integracja ruchomego okna
     if (pan_tompkins_window_length == 0) {
-        pan_tompkins_window_length = static_cast<int>(0.12 * signal_frequency);
+        pan_tompkins_window_length = static_cast<int>(0.012 * signal_frequency);
     }
     std::vector<double> integrated_signal(squared_signal.size() - pan_tompkins_window_length + 1);
     for (size_t i = 0; i < integrated_signal.size(); ++i) {
@@ -193,10 +200,11 @@ bool RPeaks::hilbertTransform(const std::vector<double>& signal, std::vector<int
         amplitude_envelope[i] = std::abs(analytic_signal[i]);
     }
 
-    // Parametry
-    int proximity = static_cast<int>(0.15 * signal_frequency);
-    //TO DO: Ustawić proximity tak aby wartość zmieniala się dynamicznie w zależności od czestotliwości sygnału
-    double threshold = 0.3 * (*std::max_element(amplitude_envelope.begin(), amplitude_envelope.end()));
+    // Ustawienie proximity
+    int proximity = hilbert_custom_proximity ? hilbert_proximity : static_cast<int>(0.8 * signal_frequency);
+
+    // Ustawienie threshold
+    double threshold = 0.2 * (*std::max_element(amplitude_envelope.begin(), amplitude_envelope.end()));
 
     // Detekcja załamków
     for (size_t i = 1; i < amplitude_envelope.size() - 1; ++i) {
