@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <chrono>
 using namespace std;
 
 
@@ -16,6 +17,7 @@ class DataReader {
     ifstream input_file;
     double conv_factor;
     double sample_rate;
+    chrono::duration<double, milli> time_measure;
 
     streampos bytes;
     int16_t value;
@@ -43,6 +45,7 @@ class DataReader {
     void write_MLII(int samples = -1);
     void write_V(int samples = -1);
     void write_time(int samples = -1);
+    void write_measured_time();
 };
 
 inline Signal DataReader::read_MLII() {

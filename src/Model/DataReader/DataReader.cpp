@@ -40,14 +40,18 @@ void DataReader::load_time() {
 
 DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
 : file_path(file_path), conv_factor(conv_factor), sample_rate(sample_rate) {
-    input_file.open(file_path, ios::in | ios::binary);
+    try {
+        input_file.open(file_path, ios::in | ios::binary);
 
-    input_file.seekg(0, ios::end);
-    bytes = input_file.tellg();
-    input_file.seekg(0, ios::beg);
+        input_file.seekg(0, ios::end);
+        bytes = input_file.tellg();
+        input_file.seekg(0, ios::beg);
 
-    buffer.resize(bytes);
-    input_file.read(buffer.data(), bytes);
+        buffer.resize(bytes);
+        input_file.read(buffer.data(), bytes);
+    } catch (...) {
+        cout << "DataReader::DataReader: Error reading file" << endl;
+    }
 
     value = 0;
     bitpose = 0;
@@ -56,7 +60,10 @@ DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
     bitidx = 0;
     byteidx = 0;
 
+    auto start = std::chrono::high_resolution_clock::now();
     insert_data_to_subsets();
+    auto stop = std::chrono::high_resolution_clock::now();
+    time_measure = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     load_time();
 
     dataMLII.setX(time);
@@ -121,4 +128,8 @@ void DataReader::write_time(int samples) {
         cout << time[i] << " ";
     }
     cout << endl;
+}
+
+void DataReader::write_measured_time() {
+    cout << "Time measurement: " << time_measure<< endl;
 }
