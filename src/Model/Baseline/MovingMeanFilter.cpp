@@ -1,56 +1,30 @@
 #include "MovingMeanFilter.h"
+#include <cmath>
 
-MovingMeanFilter::MovingMeanFilter(int filterLength)
+void MovingMeanFilter::set(int FilterLength)
 {
-    this->filterLength = filterLength;
-    this->filterPtr = new double[filterLength];
-    this->lastVal = 0.0;
-    initFilter();
+    this->filterLength=FilterLength;
 }
 
-double MovingMeanFilter::addSample(double newVal)
-{
-    shiftFilter(newVal);
-    computeMean();
-    return this->lastVal;
-}
+Signal MovingMeanFilter::applyFilter(const Signal& inputSignal) const {
 
-double MovingMeanFilter::getValue()
-{
-    return this->lastVal;
-}
-
-void MovingMeanFilter::dumpFilter()
-{
-    this->lastVal = 0.0;
-    initFilter();
-}
-
-void MovingMeanFilter::shiftFilter(double nextVal)
-{
-    for(int i = this->filterLength - 1; i > -1; i--)
+    std::vector<double> oldY = inputSignal.getY;
+    std::vector<double> newY;
+    double sum = 0;
+    for(int i = 0; i<sizeof(oldY);i++)
     {
-        if(i==0)
-            *(filterPtr) = nextVal;
+        if(i<std::floor(filterLength/2) or (sizeof(oldY) - i)<std::floor(filterLength/2)) {
+            newY[i] = oldY[i];
+        }
         else
-            *(filterPtr+i) = *(filterPtr + (i-1));
-    }
-}
+        {
+            for(int j = std::floor(i-filterLength/2);i<=std::floor(i+filterLength/2);i++)
+                sum+=oldY[j];
 
-void MovingMeanFilter::computeMean()
-{
-    double sum = 0.0;
-    for(int i = 0; i< this->filterLength; i++)
-    {
-        sum+= *(filterPtr+1);
+            newY[i] = sum/filterLength;
+            sum = 0;
+        }
+            
     }
-    this->lastVal = sum / this->filterLength;
-}
-
-void MovingMeanFilter::initFilter()
-{
-    for(int i = 0; i < this->filterLength; i++)
-    {
-        *(filterPtr+i) = 0.0;
-    }
+    inputSignal::SetY(newY);
 }
