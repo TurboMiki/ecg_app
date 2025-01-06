@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 
+class QMenu;
+class SettingsForm;
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -32,5 +35,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+
+    QMenu *m_settingsedit_menu;
+    SettingsForm *m_settingsedit_popup_form;
 };
 #endif // MAINWINDOW_H

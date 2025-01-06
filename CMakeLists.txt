@@ -40,6 +40,7 @@ target_include_directories(ecg_app PUBLIC
 
     include/View
     include/View/MainWindow
+    include/View/SettingsForm
     include/ViewModel
     
 )

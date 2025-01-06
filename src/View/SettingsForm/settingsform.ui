@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsForm</class>
+ <widget class="QWidget" name="SettingsForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>248</width>
+    <height>317</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QLabel" name="label_6">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>210</y>
+     <width>63</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Param6</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Param4">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>130</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>170</y>
+     <width>63</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Param5</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Param1">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>10</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>63</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Param1</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Param3">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>90</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Param6">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>210</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="Cancel">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>270</y>
+     <width>83</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cancel</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Param5">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>170</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Param2">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>50</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>130</y>
+     <width>63</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Param4</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>63</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Param3</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>63</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Param2</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="OK">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>270</y>
+     <width>83</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OK</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
