@@ -15,6 +15,7 @@ set(Qt6_DIR $ENV{QT_PATH})
 find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QT_PATH})
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 # Zdefiniowanie źródeł
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
