@@ -7,7 +7,7 @@ public:
     void process(const Signal& rIds);
     std::array<float, 4> getParams() const;
     Signal getRHist() const;
-    Signal getPointCarePlot() const;
+    Signal getPoincarePlot() const;
 
 private:
     std::array<float, 4> params_;
