@@ -22,10 +22,7 @@ file(GLOB_RECURSE SOURCES src/**/*.cpp)
 message(STATUS "Source files found: ${SOURCES}")
 
 # Biblioteka statyczna
-add_library(ecg_app STATIC ${SOURCES}
-        include/DataReader/DataReader.h
-        main.cpp
-        include/DataReader/DataReader.h)
+add_library(ecg_app STATIC ${SOURCES})
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model

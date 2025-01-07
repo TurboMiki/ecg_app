@@ -131,5 +131,5 @@ void DataReader::write_time(int samples) {
 }
 
 void DataReader::write_measured_time() {
-    cout << "Time measurement: " << time_measure<< endl;
+    cout << "Time measurement: " << time_measure.count() << endl;
 }
