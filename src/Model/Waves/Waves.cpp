@@ -22,14 +22,12 @@ double percentileAbs(const std::vector<double>& data, double percentile) {
 std::pair<std::vector<int>, std::vector<int>> detectQRSOnsetEnd(
     const Signal& signal,
     const std::vector<int>& rPeaks) {
-    // rPeaks trzeba będzie zmienić żeby były pobierane z wyjścia modułu Rpeaks, ale teraz mi błędy wychodziły, więc tak zostawiam
 
     std::vector<int> qrsOnsets;
     std::vector<int> qrsEnds;
 
     const auto& y = signal.getY();
     int fs = signal.getSamplingRate();
-    
 
     // Obliczanie interwałów RR
     std::vector<double> rrIntervals;
@@ -47,8 +45,8 @@ std::pair<std::vector<int>, std::vector<int>> detectQRSOnsetEnd(
 
     for (int rPeak : rPeaks) {
         // QRS Onset
-        int searchStart = std::max(0, rPeak - searchWindow);
-        int searchEnd = rPeak;
+        int searchStart = std::clamp(rPeak - searchWindow, 0, static_cast<int>(y.size()) - 1);
+        int searchEnd = std::clamp(rPeak, 0, static_cast<int>(y.size()));
 
         std::vector<double> segment(y.begin() + searchStart, y.begin() + searchEnd);
         std::vector<double> gradients(segment.size() - 1);
@@ -67,8 +65,8 @@ std::pair<std::vector<int>, std::vector<int>> detectQRSOnsetEnd(
         }
 
         // QRS End
-        searchStart = rPeak;
-        searchEnd = std::min(static_cast<int>(y.size()), rPeak + searchWindow * 2);
+        searchStart = std::clamp(rPeak, 0, static_cast<int>(y.size()) - 1);
+        searchEnd = std::clamp(rPeak + searchWindow * 2, 0, static_cast<int>(y.size()));
 
         segment = std::vector<double>(y.begin() + searchStart, y.begin() + searchEnd);
         gradients.resize(segment.size() - 1);
@@ -115,8 +113,8 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int>> detectPWave(
 
     for (int qrsOnset : qrsOnsets) {
         // Znajdź szczyt fali P w oknie przed QRS
-        int searchStart = std::max(0, qrsOnset - peakWindow);
-        int searchEnd = qrsOnset;
+        int searchStart = std::clamp(qrsOnset - peakWindow, 0, static_cast<int>(y.size()) - 1);
+        int searchEnd = std::clamp(qrsOnset, 0, static_cast<int>(y.size()));
 
         std::vector<double> segment(y.begin() + searchStart, y.begin() + searchEnd);
         auto pPeakLocal = std::max_element(segment.begin(), segment.end());
@@ -124,19 +122,16 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int>> detectPWave(
         pPeaks.push_back(pPeak);
 
         // Znajdź onset fali P
-        searchStart = std::max(0, pPeak - onsetWindow);
-        searchEnd = pPeak;
+        searchStart = std::clamp(pPeak - onsetWindow, 0, static_cast<int>(y.size()) - 1);
+        searchEnd = std::clamp(pPeak, 0, static_cast<int>(y.size()));
 
         std::vector<double> onsetSegment(y.begin() + searchStart, y.begin() + searchEnd);
         std::vector<double> onsetGradients(onsetSegment.size() - 1);
 
-        // Oblicz gradienty dla onsetu
         for (size_t i = 0; i < onsetGradients.size(); ++i) {
             onsetGradients[i] = onsetSegment[i + 1] - onsetSegment[i];
         }
 
-        // Znajdź punkt onsetu fali P
-        double threshold = 0.01;
         if (!onsetGradients.empty()) {
             auto minOnsetGradient = std::min_element(onsetGradients.begin(), onsetGradients.end(),
                 [](double a, double b) { return std::abs(a) < std::abs(b); });
@@ -145,18 +140,16 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int>> detectPWave(
         }
 
         // Znajdź koniec fali P
-        searchStart = pPeak;
-        searchEnd = std::min(static_cast<int>(y.size()), pPeak + endWindow);
+        searchStart = std::clamp(pPeak, 0, static_cast<int>(y.size()) - 1);
+        searchEnd = std::clamp(pPeak + endWindow, 0, static_cast<int>(y.size()));
 
         std::vector<double> endSegment(y.begin() + searchStart, y.begin() + searchEnd);
         std::vector<double> endGradients(endSegment.size() - 1);
 
-        // Oblicz gradienty dla końca
         for (size_t i = 0; i < endGradients.size(); ++i) {
             endGradients[i] = endSegment[i + 1] - endSegment[i];
         }
 
-        // Znajdź punkt końca fali P
         if (!endGradients.empty()) {
             auto minEndGradient = std::min_element(endGradients.begin(), endGradients.end(),
                 [](double a, double b) { return std::abs(a) < std::abs(b); });
@@ -167,7 +160,8 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int>> detectPWave(
 
     return {pOnsets, pPeaks, pEnds};
 }
-// Funkcja do wykrywania końca fali T (dziwne punkty wykrywa, więc do poprawy)
+
+// Funkcja do wykrywania końca fali T
 std::vector<int> detectTEnds(const Signal& signal, const std::vector<int>& pOnsets) {
     const auto& y = signal.getY();
     int fs = signal.getSamplingRate();
@@ -175,8 +169,8 @@ std::vector<int> detectTEnds(const Signal& signal, const std::vector<int>& pOnse
     std::vector<int> tEnds;
 
     for (int pOnset : pOnsets) {
-        int searchStart = pOnset + static_cast<int>(0.2 * fs);
-        int searchEnd = std::min(static_cast<int>(y.size()), pOnset + static_cast<int>(0.4 * fs));
+        int searchStart = std::clamp(pOnset + static_cast<int>(0.2 * fs), 0, static_cast<int>(y.size()) - 1);
+        int searchEnd = std::clamp(pOnset + static_cast<int>(0.4 * fs), 0, static_cast<int>(y.size()));
 
         if (searchStart >= searchEnd) {
             continue;
