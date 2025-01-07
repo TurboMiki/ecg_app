@@ -11,8 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Ustawienie ścieżki do Qt
-set(Qt6_DIR $ENV{QT_PATH})
-find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QT_PATH})
+set(Qt6_DIR $ENV{QTDIR})
+find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QTDIR})
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -23,8 +23,6 @@ message(STATUS "Source files found: ${SOURCES}")
 
 # Biblioteka statyczna
 add_library(ecg_app STATIC ${SOURCES})
-
-# Explicitly include necessary directories
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model
@@ -40,7 +38,7 @@ target_include_directories(ecg_app PUBLIC
 
     include/View
     include/View/MainWindow
-
+    include/View/SettingsForm
     include/ViewModel
     
 )
