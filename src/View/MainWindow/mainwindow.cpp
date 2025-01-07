@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "settingsform.h"
+#include <QMenu>
+#include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -7,7 +10,17 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->progressBar_1->setMaximum(200);
+    //Icon
+    ui->START->setIcon(QIcon("/home/miki/vcs_projects/dadm_app/ecg_app/src/View/MainWindow/icons/play.png"));
+    ui->Config->setIcon(QIcon("/home/miki/vcs_projects/dadm_app/ecg_app/src/View/MainWindow/icons/gear.png"));
+
+    //Forms
+    ui->Config->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_settingsedit_menu = new QMenu(this);
+    m_settingsedit_popup_form = new SettingsForm(this);
+    QVBoxLayout *config_layout = new QVBoxLayout;
+    config_layout->addWidget(m_settingsedit_popup_form);
+    m_settingsedit_menu->setLayout(config_layout);
 }
 
 MainWindow::~MainWindow()
@@ -15,18 +28,38 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_clickButton_1_clicked()
+void MainWindow::on_pushButton_clicked()
 {
-    for (int i=0; i<=ui->progressBar_1->maximum(); i++){
-        QThread::msleep(20);
-        ui->progressBar_1->setValue(i);
-        qApp->processEvents(QEventLoop::AllEvents);
-    }
-    QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Message");
-    msgBox.setText("Loading concluded. Please get to work!");
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setStyleSheet("QMessageBox { border: 2px solid black; }"); // Add a border
-    msgBox.exec();
+    ui->START->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/play_push.png"));
+}
+
+
+void MainWindow::on_pushButton_pressed()
+{
+    ui->START->setIcon(QIcon("/Users/mateu/OneDrive/Desktop/play_push.png"));
+}
+
+void MainWindow::on_START_clicked(bool)
+{
+
+}
+void MainWindow::on_START_clicked()
+{
+
+}
+
+void MainWindow::on_Config_clicked()
+{
+    ui->Config->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_settingsedit_menu = new QMenu(this);
+    m_settingsedit_popup_form = new SettingsForm(this);
+    QVBoxLayout *config_layout = new QVBoxLayout;
+    config_layout->addWidget(m_settingsedit_popup_form);
+    m_settingsedit_menu->setLayout(config_layout);
+}
+
+void MainWindow::on_pushButton_6_clicked()
+{
+
 }
 
