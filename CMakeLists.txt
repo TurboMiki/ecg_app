@@ -10,13 +10,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Ustawienie ścieżek do Qt
-set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/lib/cmake")
-set(Qt6_DIR "C:/Qt/6.9.0/msvc2022_64/lib/cmake/Qt6")
-set(Qt6GuiTools_DIR "C:/Qt/6.9.0/msvc2022_64/lib/cmake/Qt6GuiTools")
-set(Qt6Widgets_DIR "C:/Qt/6.9.0/msvc2022_64/lib/cmake/Qt6Widgets")
+# Ustawienie ścieżki do Qt
+set(Qt6_DIR $ENV{QTDIR})
+find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QTDIR})
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 # Zdefiniowanie źródeł
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
@@ -24,8 +23,6 @@ message(STATUS "Source files found: ${SOURCES}")
 
 # Biblioteka statyczna
 add_library(ecg_app STATIC ${SOURCES})
-
-# Explicitly include necessary directories
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model
@@ -41,7 +38,7 @@ target_include_directories(ecg_app PUBLIC
 
     include/View
     include/View/MainWindow
-
+    include/View/SettingsForm
     include/ViewModel
     
 )
