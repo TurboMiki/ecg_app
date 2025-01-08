@@ -23,6 +23,12 @@ message(STATUS "Source files found: ${SOURCES}")
 
 # Biblioteka statyczna
 add_library(ecg_app STATIC ${SOURCES})
+# Dodanie plików zasobów do biblioteki
+set(RESOURCE_FILES src/View/MainWindow/resources.qrc)
+qt6_add_resources(RESOURCES ${RESOURCE_FILES})
+target_sources(ecg_app PRIVATE ${RESOURCES})
+
+# Explicitly include necessary directories										
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model
@@ -38,7 +44,6 @@ target_include_directories(ecg_app PUBLIC
 
     include/View
     include/View/MainWindow
-    include/View/SettingsForm
     include/ViewModel
     
 )
@@ -64,6 +69,12 @@ enable_testing()
 
 # Testy
 add_executable(test_signal tests/test_signal.cpp)
+target_include_directories(test_signal PRIVATE 
+    include
+    include/Model
+    include/View
+    include/ViewModel
+)											   
 target_link_libraries(test_signal PRIVATE gtest gtest_main ecg_app Qt6::Widgets)
 
 include(GoogleTest)
