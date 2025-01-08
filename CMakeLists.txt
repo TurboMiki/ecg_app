@@ -10,12 +10,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Ustawienie ścieżki do Qt
-set(Qt6_DIR $ENV{QT_PATH})
-find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QT_PATH})
+# Ustawienie ścieżek do Qt
+set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/lib/cmake")
+set(Qt6_DIR "C:/Qt/6.9.0/msvc2022_64/lib/cmake/Qt6")
+set(Qt6GuiTools_DIR "C:/Qt/6.9.0/msvc2022_64/lib/cmake/Qt6GuiTools")
+set(Qt6Widgets_DIR "C:/Qt/6.9.0/msvc2022_64/lib/cmake/Qt6Widgets")
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 # Zdefiniowanie źródeł
 file(GLOB_RECURSE SOURCES src/**/*.cpp)

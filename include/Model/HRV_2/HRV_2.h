@@ -4,13 +4,14 @@
 
 class HRV_2 {
 public:
+    HRV_2();
     void process(const Signal& rIds);
-    std::array<float, 4> getParams() const;
+    std::array<double, 4> getParams() const;
     Signal getRHist() const;
     Signal getPoincarePlot() const;
 
 private:
-    std::array<float, 4> params_;
+    std::array<double, 4> params_;
     Signal rHist_;
-    Signal pointcarePlot_;
+    Signal poincarePlot_;
 };
