@@ -36,8 +36,10 @@ class DataReader {
     int16_t change_if_negative(int16_t input);
 
     public:
-    DataReader(string file_path, double conv_factor = 20.0, double sample_rate = 360.0);
+    DataReader(string file_path, double conv_factor = 200.0, double sample_rate = 360.0);
     ~DataReader();
+
+    void set_path(string path, double conv_factor = 200.0, double sample_rate = 360.0);
 
     Signal read_MLII();
     Signal read_V();

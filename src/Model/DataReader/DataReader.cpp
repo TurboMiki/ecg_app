@@ -6,6 +6,13 @@ int16_t DataReader::change_if_negative(int16_t input) {
 }
 
 void DataReader::insert_data_to_subsets() {
+    if(!dataMLII_vec.empty()) {
+        dataMLII_vec.clear();
+    }
+    if(!dataV_vec.empty()) {
+        dataV_vec.clear();
+    }
+
     while (bitpose + bitsize <= bytes * 8) {
 
         bytepos = bitpose / 8;
@@ -32,6 +39,10 @@ void DataReader::insert_data_to_subsets() {
 }
 
 void DataReader::load_time() {
+    if(!time.empty()) {
+        time.clear();
+    }
+
     int len_data = dataMLII_vec.size();
     for (double tick = 0; tick < (1/sample_rate) * (len_data - 1); tick = tick + 1/sample_rate) {
         time.push_back(tick);
@@ -77,6 +88,49 @@ DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
 
 DataReader::~DataReader() {
     input_file.close();
+}
+
+void DataReader::set_path(string path, double conv_factor, double sample_rate) {
+    file_path = path;
+    this->conv_factor = conv_factor;
+    this->sample_rate = sample_rate;
+
+    try {
+        if(input_file.is_open()) {
+            input_file.close();
+        }
+        input_file.open(file_path, ios::in | ios::binary);
+
+        input_file.seekg(0, ios::end);
+        bytes = input_file.tellg();
+        input_file.seekg(0, ios::beg);
+
+        buffer.resize(bytes);
+        input_file.read(buffer.data(), bytes);
+    } catch (...) {
+        cout << "DataReader::DataReader: Error reading file" << endl;
+    }
+
+    value = 0;
+    bitpose = 0;
+    bytepos = 0;
+    bit_in_byte = 0;
+    bitidx = 0;
+    byteidx = 0;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    insert_data_to_subsets();
+    auto stop = std::chrono::high_resolution_clock::now();
+    time_measure = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    load_time();
+
+    dataMLII.setX(time);
+    dataMLII.setY(dataMLII_vec);
+    dataMLII.setSamplingRate(sample_rate);
+
+    dataV.setX(time);
+    dataV.setY(dataV_vec);
+    dataV.setSamplingRate(sample_rate);
 }
 
 void DataReader::write_MLII(int samples) {
