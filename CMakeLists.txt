@@ -21,8 +21,17 @@ set(CMAKE_AUTOUIC ON)
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
 message(STATUS "Source files found: ${SOURCES}")
 
+# First add the Wykresy subdirectory so its directories are available
+add_subdirectory(Wykresy)
+
 # Biblioteka statyczna
 add_library(ecg_app STATIC ${SOURCES})
+# Dodanie plików zasobów do biblioteki
+set(RESOURCE_FILES src/View/MainWindow/resources.qrc)
+qt6_add_resources(RESOURCES ${RESOURCE_FILES})
+target_sources(ecg_app PRIVATE ${RESOURCES})
+
+# Explicitly include necessary directories										
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model
@@ -35,17 +44,17 @@ target_include_directories(ecg_app PUBLIC
     include/Model/Signal
     include/Model/Waves
     include/Model/HeartClass
-
     include/View
     include/View/MainWindow
-    include/View/SettingsForm
     include/ViewModel
-    
+    "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"  # Add this line to access visualization headers
 )
 
-# Znalezienie Qt
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
-target_link_libraries(ecg_app Qt6::Widgets)
+# Link Qt libraries and visualization
+target_link_libraries(ecg_app PUBLIC 
+    Qt6::Widgets
+    visualization
+)
 
 # Plik wykonywalny
 add_executable(ECGProcessing main.cpp)
@@ -64,7 +73,19 @@ enable_testing()
 
 # Testy
 add_executable(test_signal tests/test_signal.cpp)
-target_link_libraries(test_signal PRIVATE gtest gtest_main ecg_app Qt6::Widgets)
+target_include_directories(test_signal PRIVATE 
+    include
+    include/Model
+    include/View
+    include/ViewModel
+    "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"  # Add this line too if tests need visualization headers
+)											   
+target_link_libraries(test_signal PRIVATE 
+    gtest 
+    gtest_main 
+    ecg_app 
+    Qt6::Widgets
+)
 
 include(GoogleTest)
 gtest_discover_tests(test_signal)
