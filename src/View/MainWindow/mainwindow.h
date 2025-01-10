@@ -2,9 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
-class QMenu;
-class SettingsForm;
+#include <QStringList>
+#include "settingsform.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,26 +16,33 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    void requestData(const QStringList &data);
+
 private slots:
-    void on_pushButton_clicked();
-
-    void on_pushButton_pressed();
-
-    void on_START_clicked(bool checked);
-
     void on_START_clicked();
-
-    void on_pushButton_6_clicked();
-
     void on_Config_clicked();
+    void get_settings(const QStringList &data); // get parameters from settings form
+    void write_settings(const QStringList &data); // writes private data
+    void debug_settings(); // only for debug use
+
+    void on_btnPath_clicked();
+
+    void on_btnRaw_clicked();
 
 private:
     Ui::MainWindow *ui;
-
-    QMenu *m_settingsedit_menu;
-    SettingsForm *m_settingsedit_popup_form;
+    SettingsForm *ptrSettingsForm;
+    //Basic_Plot *plotWidget;
+    QString parameter1;
+    QString parameter2;
+    QString parameter3;
+    QString parameter4;
+    QString parameter5;
+    QString filePath;
 };
+
 #endif // MAINWINDOW_H
