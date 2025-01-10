@@ -2,7 +2,8 @@
 #define BASIC_PLOT_H
 
 #include <QWidget>
-#include <QCustomPlot.h>  // Zakładając, że masz zainstalowaną bibliotekę QCustomPlot
+#include "qcustomplot.h"
+#include "Signal.h"
 #include <QString>
 
 class Basic_Plot : public QWidget

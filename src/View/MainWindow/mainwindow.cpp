@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "settingsform.h"
+#include "basic_plot.h"
+#include "histogram_plot.h"
+#include "waves_plot.h"
+
 #include <QDebug>
 #include <QFileDialog>
 
