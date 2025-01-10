@@ -1,15 +1,14 @@
 #ifndef SETTINGSFORM_H
 #define SETTINGSFORM_H
 
-#include <QWidget>
-
-class QSettingsForm;
+#include <QDialog>
+#include <QStringList>
 
 namespace Ui {
 class SettingsForm;
 }
 
-class SettingsForm : public QWidget
+class SettingsForm : public QDialog
 {
     Q_OBJECT
 
@@ -17,14 +16,15 @@ public:
     explicit SettingsForm(QWidget *parent = nullptr);
     ~SettingsForm();
 
-    QSettingsForm *settingsform() const
-        {
-        return m_settingsform;
-        }
+signals:
+    void pass_values(const QStringList &data);
+
+private slots:
+    void on_btnSave_clicked();
+    void on_btnCancel_clicked();
 
 private:
     Ui::SettingsForm *ui;
-    QSettingsForm *m_settingsform;
 };
 
 #endif // SETTINGSFORM_H

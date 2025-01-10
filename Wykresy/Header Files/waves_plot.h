@@ -2,7 +2,8 @@
 #define WAVES_PLOT_H
 
 #include <QWidget>
-#include <QCustomPlot.h>
+#include "qcustomplot.h"
+#include "Signal.h"
 #include <QString>
 #include <QVector>
 
