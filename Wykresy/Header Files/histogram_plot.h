@@ -2,7 +2,8 @@
 #define HISTOGRAM_PLOT_H
 
 #include <QWidget>
-#include <QCustomPlot.h>
+#include "qcustomplot.h"
+#include "Signal.h"
 
 class Histogram_Plot : public QWidget
 {
