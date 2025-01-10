@@ -14,16 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QGraphicsView" name="Plots">
-    <property name="geometry">
-     <rect>
-      <x>380</x>
-      <y>120</y>
-      <width>1131</width>
-      <height>591</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QFrame" name="topbar">
     <property name="geometry">
      <rect>
@@ -532,7 +522,7 @@
       </size>
      </property>
     </widget>
-    <widget class="QToolButton" name="toolButton">
+    <widget class="QToolButton" name="btnPath">
      <property name="geometry">
       <rect>
        <x>330</x>
@@ -558,7 +548,10 @@
       <string>Path to file</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit">
+    <widget class="QLineEdit" name="linePath">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -566,6 +559,12 @@
        <width>301</width>
        <height>41</height>
       </rect>
+     </property>
+     <property name="acceptDrops">
+      <bool>false</bool>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QPushButton" name="Config">
@@ -587,19 +586,6 @@
       </size>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton">
-     <property name="geometry">
-      <rect>
-       <x>380</x>
-       <y>30</y>
-       <width>111</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Load File</string>
-     </property>
-    </widget>
    </widget>
    <widget class="QFrame" name="frame_4">
     <property name="geometry">
@@ -616,7 +602,7 @@
     <property name="frameShadow">
      <enum>QFrame::Shadow::Raised</enum>
     </property>
-    <widget class="QCheckBox" name="checkBox">
+    <widget class="QCheckBox" name="checkBoxRP">
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -657,7 +643,7 @@
      <property name="frameShadow">
       <enum>QFrame::Shadow::Raised</enum>
      </property>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="btnFECG">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -670,7 +656,7 @@
        <string>Filtered ECG Signal</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_3">
+     <widget class="QPushButton" name="btnHRV2">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -683,7 +669,7 @@
        <string>Poincaré (HRV_2)</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_4">
+     <widget class="QPushButton" name="btnHRV_DFA">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -696,7 +682,7 @@
        <string>log-log (HRV_DFA)</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_5">
+     <widget class="QPushButton" name="btnRaw">
       <property name="geometry">
        <rect>
         <x>20</x>
