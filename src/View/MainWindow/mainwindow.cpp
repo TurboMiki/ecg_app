@@ -97,9 +97,8 @@ void MainWindow::debug_settings()
 
 void MainWindow::on_btnPath_clicked()
 {
-    QString fileFilter = "Excel Files (*.xlsx)";
+    QString fileFilter = "All Supported Files (*.dat *.csv *.xlsx);;Data Files (*.dat);;CSV Files (*.csv);;Excel Files (*.xlsx)";
     QString selectedFile = QFileDialog::getOpenFileName(this, "Choose file", QDir::homePath(), fileFilter);
-
     if (!selectedFile.isEmpty())
     {
         this->filePath = selectedFile;
