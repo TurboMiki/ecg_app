@@ -1,6 +1,6 @@
 
 # **ECG App**
-> Main project for DADM (kc Fabian)  
+> Main project for DADM  
 
 ---
 
