@@ -105,11 +105,16 @@ void MainWindow::on_btnPath_clicked()
         this->filePath = selectedFile;
         ui->linePath->setText(this->filePath);
     }
+    fileReader.setPath(ui->linePath->text().toStdString());
 }
 
 
 void MainWindow::on_btnRaw_clicked()
 {
+    fileReader.readFile();
+    // Basic_Plot rawPlot = Basic_Plot(ui->frame_2);
+    // QVector<int> Highlight = {};
+    // rawPlot.updateBasicPlot(fileReader.read_V(),Highlight,"Raw","Raw","x","y");
     /*
     if (!plotWidget) {
         plotWidget = new Basic_Plot(this);

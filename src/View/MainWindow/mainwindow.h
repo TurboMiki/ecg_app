@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QStringList>
 #include "settingsform.h"
+#include <DataReader.h>
+#include "basic_plot.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -43,6 +45,8 @@ private:
     QString parameter4;
     QString parameter5;
     QString filePath;
+    DataReader fileReader = DataReader();
+    Basic_Plot rawPlot = Basic_Plot();
 };
 
 #endif // MAINWINDOW_H

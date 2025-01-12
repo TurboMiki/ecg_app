@@ -1,4 +1,5 @@
 #include "DataReader.h"
+#include <iostream>
 
 int16_t DataReader::change_if_negative(int16_t input) {
     input |= 0xF000;
@@ -39,7 +40,7 @@ void DataReader::load_time() {
 }
 
 DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
-: file_path(file_path), conv_factor(conv_factor), sample_rate(sample_rate) {
+    : file_path(file_path), conv_factor(conv_factor), sample_rate(sample_rate) {
     try {
         input_file.open(file_path, ios::in | ios::binary);
 
@@ -77,6 +78,41 @@ DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
 
 DataReader::~DataReader() {
     input_file.close();
+}
+
+void DataReader::setPath(string filePath){
+    this->file_path = filePath;
+}
+void DataReader::readFile(){
+    try {
+        input_file.open(file_path, ios::in | ios::binary);
+
+        input_file.seekg(0, ios::end);
+        bytes = input_file.tellg();
+        input_file.seekg(0, ios::beg);
+
+        buffer.resize(bytes);
+        input_file.read(buffer.data(), bytes);
+    } catch (...) {
+        cout << "DataReader::DataReader: Error reading file" << endl;
+    }
+
+    value = 0;
+    bitpose = 0;
+    bytepos = 0;
+    bit_in_byte = 0;
+    bitidx = 0;
+    byteidx = 0;
+
+    insert_data_to_subsets();
+
+    dataMLII.setX(time);
+    dataMLII.setY(dataMLII_vec);
+    dataMLII.setSamplingRate(sample_rate);
+
+    dataV.setX(time);
+    dataV.setY(dataV_vec);
+    dataV.setSamplingRate(sample_rate);
 }
 
 void DataReader::write_MLII(int samples) {
@@ -132,4 +168,8 @@ void DataReader::write_time(int samples) {
 
 void DataReader::write_measured_time() {
     cout << "Time measurement: " << time_measure.count() << endl;
+}
+
+DataReader::DataReader() {
+
 }
