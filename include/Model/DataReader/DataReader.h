@@ -1,5 +1,5 @@
 #pragma once
-
+#include <Signal.h>
 #include <fstream>
 #include <vector>
 #include <cstdint>

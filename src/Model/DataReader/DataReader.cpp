@@ -94,6 +94,7 @@ DataReader::~DataReader() {
 void DataReader::setPath(string filePath){
     this->file_path = filePath;
 }
+
 void DataReader::readFile(){
     try {
         input_file.open(file_path, ios::in | ios::binary);

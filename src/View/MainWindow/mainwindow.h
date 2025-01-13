@@ -38,7 +38,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;
-    //Basic_Plot *plotWidget;
+    // Basic_Plot *plotWidget;
     QString parameter1;
     QString parameter2;
     QString parameter3;
@@ -46,7 +46,7 @@ private:
     QString parameter5;
     QString filePath;
     DataReader fileReader = DataReader();
-    Basic_Plot rawPlot = Basic_Plot();
+    // Basic_Plot rawPlot = Basic_Plot();
 };
 
 #endif // MAINWINDOW_H
