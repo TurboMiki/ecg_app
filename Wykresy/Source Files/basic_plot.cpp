@@ -24,9 +24,6 @@ Basic_Plot::Basic_Plot(QWidget *parent)
     customPlot->axisRect()->setRangeZoom(Qt::Horizontal | Qt::Vertical);
 }
 
-
-
-
 Basic_Plot::~Basic_Plot()
 {
     delete customPlot;  // Zwolnienie pamięci
@@ -84,6 +81,4 @@ void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highl
     setTitle(title);  // Ustawienie tytułu wykresu
     customPlot->replot();  // Rysowanie wykresu
 }
-
-
 
