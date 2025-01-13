@@ -90,34 +90,50 @@ void MainWindow::on_btnRaw_clicked()
         return;
     }
 
-    fileReader.readFile();
-    
-    // Create the plot if it doesn't exist
-    if (!plotWidget) {
-        plotWidget = new Basic_Plot(ui->frame_2);
-        
-        // Create a QVBoxLayout for frame_2 if it doesn't have one
-        if (!ui->frame_2->layout()) {
-            QVBoxLayout* layout = new QVBoxLayout(ui->frame_2);
-            layout->setContentsMargins(0, 0, 0, 0);
-            ui->frame_2->setLayout(layout);
-        }
-        
-        // Add the plot to the layout
-        ui->frame_2->layout()->addWidget(plotWidget);
-    }
-
     try {
-        // Update the plot with data
-        QVector<int> highlights; // Empty vector for highlights
-        Signal signal = fileReader.read_V(); // Get the signal data
+        fileReader.setPath(ui->linePath->text().toStdString());
+        fileReader.readFile();
+        
+        // Create the plot if it doesn't exist
+        if (!plotWidget) {
+            plotWidget = new Basic_Plot(ui->frame_2);
+            
+            // Create a QVBoxLayout for frame_2 if it doesn't have one
+            if (!ui->frame_2->layout()) {
+                QVBoxLayout* layout = new QVBoxLayout(ui->frame_2);
+                layout->setContentsMargins(0, 0, 0, 0);
+                ui->frame_2->setLayout(layout);
+            }
+            
+            // Add the plot to the layout
+            ui->frame_2->layout()->addWidget(plotWidget);
+        }
+
+        // Get the MLII signal
+        Signal signal = fileReader.read_MLII();
+        
+        // Verify the data
         if(signal.getX().empty() || signal.getY().empty()) {
-            QMessageBox::warning(this, "Error", "No data available to plot!");
+            QMessageBox::warning(this, "Error", "No data available to plot! Signal is empty.");
             return;
         }
+
+        // Debug output
+        qDebug() << "Signal size X:" << signal.getX().size();
+        qDebug() << "Signal size Y:" << signal.getY().size();
+        if (!signal.getX().empty() && !signal.getY().empty()) {
+            qDebug() << "First X value:" << signal.getX().front();
+            qDebug() << "First Y value:" << signal.getY().front();
+        }
+
+        QVector<int> highlights;
+        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
         
-        plotWidget->updateBasicPlot(signal, highlights, "Raw Signal", "ECG Signal", "Time [s]", "Voltage [mV]");
     } catch (const std::exception& e) {
-        QMessageBox::critical(this, "Error", QString("Failed to plot data: %1").arg(e.what()));
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process data: %1").arg(e.what()));
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred while processing the data.");
     }
 }
