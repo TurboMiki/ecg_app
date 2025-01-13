@@ -696,6 +696,19 @@
       </property>
      </widget>
     </widget>
+    <widget class="QPushButton" name="pushButton">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>580</y>
+       <width>181</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Open plot in new window</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="frame_5">
     <property name="geometry">
@@ -716,11 +729,14 @@
    <widget class="QFrame" name="frame_2">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>170</y>
-      <width>781</width>
-      <height>391</height>
+      <x>280</x>
+      <y>140</y>
+      <width>1201</width>
+      <height>541</height>
      </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
     </property>
     <property name="frameShape">
      <enum>QFrame::Shape::StyledPanel</enum>

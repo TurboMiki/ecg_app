@@ -7,6 +7,10 @@
 #include <DataReader.h>
 #include "basic_plot.h"
 
+enum class PLOT_TYPE{
+    RAW_PLOT
+};
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -31,6 +35,10 @@ private slots:
     void on_btnPath_clicked();
     void on_btnRaw_clicked();
 
+    void on_pushButton_clicked();
+
+    void createPlot(QLayout* layout,PLOT_TYPE plotType);
+
 private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;
@@ -42,6 +50,7 @@ private:
     QString parameter5;
     QString filePath;
     DataReader fileReader;
+    PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
 };
 
 #endif // MAINWINDOW_H

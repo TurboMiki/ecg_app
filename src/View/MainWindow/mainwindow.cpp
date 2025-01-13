@@ -81,54 +81,29 @@ void MainWindow::on_btnPath_clicked()
         ui->linePath->setText(this->filePath);
     }
     fileReader.setPath(ui->linePath->text().toStdString());
+    fileReader.readFile();
 }
 
 void MainWindow::on_btnRaw_clicked()
 {
+
     if (ui->linePath->text().isEmpty()) {
         QMessageBox::warning(this, "Warning", "Please select a file first!");
         return;
     }
 
     try {
-        fileReader.setPath(ui->linePath->text().toStdString());
-        fileReader.readFile();
         
-        // Create the plot if it doesn't exist
-        if (!plotWidget) {
-            plotWidget = new Basic_Plot(ui->frame_2);
-            
-            // Create a QVBoxLayout for frame_2 if it doesn't have one
-            if (!ui->frame_2->layout()) {
-                QVBoxLayout* layout = new QVBoxLayout(ui->frame_2);
-                layout->setContentsMargins(0, 0, 0, 0);
-                ui->frame_2->setLayout(layout);
-            }
-            
-            // Add the plot to the layout
-            ui->frame_2->layout()->addWidget(plotWidget);
+        // Ensure frame_2 has a layout
+        QLayout* layout = ui->frame_2->layout();
+        if (!layout) {
+            layout = new QVBoxLayout(ui->frame_2);
+            ui->frame_2->setLayout(layout);
         }
 
-        // Get the MLII signal
-        Signal signal = fileReader.read_MLII();
-        
-        // Verify the data
-        if(signal.getX().empty() || signal.getY().empty()) {
-            QMessageBox::warning(this, "Error", "No data available to plot! Signal is empty.");
-            return;
-        }
+        // Call createPlot with the desired plot type
+        createPlot(layout, PLOT_TYPE::RAW_PLOT);
 
-        // Debug output
-        qDebug() << "Signal size X:" << signal.getX().size();
-        qDebug() << "Signal size Y:" << signal.getY().size();
-        if (!signal.getX().empty() && !signal.getY().empty()) {
-            qDebug() << "First X value:" << signal.getX().front();
-            qDebug() << "First Y value:" << signal.getY().front();
-        }
-
-        QVector<int> highlights;
-        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
-        
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
             QString("Failed to process data: %1").arg(e.what()));
@@ -137,3 +112,37 @@ void MainWindow::on_btnRaw_clicked()
             "An unknown error occurred while processing the data.");
     }
 }
+void MainWindow::on_pushButton_clicked()
+{
+    QWidget *newWindow = new QWidget();
+    newWindow->setWindowTitle("Layout in New Window");
+
+    // Check if ui->frame_2 has a layout
+    QLayout *layout = new QVBoxLayout(newWindow);
+    createPlot(layout,PLOT_TYPE::RAW_PLOT);
+    newWindow->resize(800,500);
+    newWindow->show();
+}
+
+void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
+    switch (plotType) {
+    case PLOT_TYPE::RAW_PLOT:{
+        Basic_Plot* plotWidget = new Basic_Plot();
+        Signal signal = fileReader.read_MLII();
+        QVector<int> highlights;
+
+        layout->addWidget(plotWidget);
+        // Verify the data
+        if(signal.getX().empty() || signal.getY().empty()) {
+            QMessageBox::warning(this, "Error", "No data available to plot! Signal is empty.");
+            return;
+        }
+        //
+        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+        break;
+    }
+    default:
+        break;
+    }
+}
+

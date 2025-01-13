@@ -11,8 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set Qt path
-set(Qt6_DIR "/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6")
-set(CMAKE_PREFIX_PATH "/opt/Qt/6.8.0/gcc_64")
+set(Qt6_DIR $ENV{QTDIR})
+find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QTDIR})
 
 # Qt settings
 set(CMAKE_AUTOMOC ON)
