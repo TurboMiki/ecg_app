@@ -1,4 +1,5 @@
 #include "DataReader.h"
+#include <iostream>
 
 int16_t DataReader::change_if_negative(int16_t input) {
     input |= 0xF000;
@@ -50,7 +51,7 @@ void DataReader::load_time() {
 }
 
 DataReader::DataReader(string file_path, double conv_factor, double sample_rate)
-: file_path(file_path), conv_factor(conv_factor), sample_rate(sample_rate) {
+    : file_path(file_path), conv_factor(conv_factor), sample_rate(sample_rate) {
     try {
         input_file.open(file_path, ios::in | ios::binary);
 
@@ -90,15 +91,11 @@ DataReader::~DataReader() {
     input_file.close();
 }
 
-void DataReader::set_path(string path, double conv_factor, double sample_rate) {
-    file_path = path;
-    this->conv_factor = conv_factor;
-    this->sample_rate = sample_rate;
-
+void DataReader::setPath(string filePath){
+    this->file_path = filePath;
+}
+void DataReader::readFile(){
     try {
-        if(input_file.is_open()) {
-            input_file.close();
-        }
         input_file.open(file_path, ios::in | ios::binary);
 
         input_file.seekg(0, ios::end);
@@ -118,11 +115,7 @@ void DataReader::set_path(string path, double conv_factor, double sample_rate) {
     bitidx = 0;
     byteidx = 0;
 
-    auto start = std::chrono::high_resolution_clock::now();
     insert_data_to_subsets();
-    auto stop = std::chrono::high_resolution_clock::now();
-    time_measure = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    load_time();
 
     dataMLII.setX(time);
     dataMLII.setY(dataMLII_vec);
@@ -186,4 +179,8 @@ void DataReader::write_time(int samples) {
 
 void DataReader::write_measured_time() {
     cout << "Time measurement: " << time_measure.count() << endl;
+}
+
+DataReader::DataReader() {
+
 }
