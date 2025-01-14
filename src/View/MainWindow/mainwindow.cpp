@@ -253,3 +253,93 @@ void MainWindow::on_btnFECG_clicked()
             "An unknown error occurred while processing the data.");
     }
 }
+
+// Complete script for btnFECG function with Savitzky-Golay filter
+
+
+// void MainWindow::on_btnFECG_clicked()
+// {
+//     if (ui->linePath->text().isEmpty()) {
+//         QMessageBox::warning(this, "Warning", "Please select a file first!");
+//         return;
+//     }
+
+//     try {
+//         // Show processing dialog
+//         QProgressDialog progress("Processing signal...", "Cancel", 0, 100, this);
+//         progress.setWindowModality(Qt::WindowModal);
+//         progress.setMinimumDuration(0);
+//         progress.setValue(0);
+        
+//         // Get the input signal
+//         Signal inputSignal = fileReader.read_MLII();
+//         progress.setValue(20);
+        
+//         if (inputSignal.getY().empty()) {
+//             QMessageBox::warning(this, "Warning", "Input signal is empty!");
+//             return;
+//         }
+
+//         // Using QElapsedTimer to track processing time
+//         QElapsedTimer timer;
+//         timer.start();
+        
+//         // Create and apply Savitzky-Golay filter with smaller window
+//         auto savitzkyGolayFilter = std::make_unique<SavitzkyGolayFilter>();
+//         savitzkyGolayFilter->set(23, 2);  // Window size matching required 23 points, order 2 for faster processing
+//         progress.setValue(40);
+
+//         try {
+//             baseline.setFilter(std::move(savitzkyGolayFilter));
+//             Signal filteredSignal = baseline.filterSignal(inputSignal);
+//             progress.setValue(60);
+
+//             // Check processing time
+//             qint64 elapsed = timer.elapsed();
+//             if (elapsed > 5000) { // If processing took more than 5 seconds
+//                 QMessageBox::warning(this, "Warning", 
+//                     QString("Signal processing took %1 seconds, which is longer than expected.").arg(elapsed/1000.0));
+//             }
+
+//             if (filteredSignal.getY().empty()) {
+//                 QMessageBox::warning(this, "Warning", "Filtering resulted in empty signal!");
+//                 return;
+//             }
+
+//             // Ensure frame_2 has a layout
+//             QLayout* layout = ui->frame_2->layout();
+//             if (!layout) {
+//                 layout = new QVBoxLayout(ui->frame_2);
+//                 ui->frame_2->setLayout(layout);
+//             }
+//             progress.setValue(80);
+
+//             // Clear any existing widgets in the layout
+//             QLayoutItem* child;
+//             while ((child = layout->takeAt(0)) != nullptr) {
+//                 delete child->widget();
+//                 delete child;
+//             }
+
+//             // Create and add filtered signal plot
+//             Basic_Plot* filteredPlotWidget = new Basic_Plot();
+//             layout->addWidget(filteredPlotWidget);
+//             QVector<int> highlights;
+//             filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
+//                 "Savitzky-Golay Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+//             progress.setValue(100);
+
+//         } catch (const std::exception& e) {
+//             QMessageBox::critical(this, "Error", 
+//                 QString("Filter application failed: %1").arg(e.what()));
+//             return;
+//         }
+
+//     } catch (const std::exception& e) {
+//         QMessageBox::critical(this, "Error", 
+//             QString("Failed to process data: %1").arg(e.what()));
+//     } catch (...) {
+//         QMessageBox::critical(this, "Error", 
+//             "An unknown error occurred while processing the data.");
+//     }
+// }
