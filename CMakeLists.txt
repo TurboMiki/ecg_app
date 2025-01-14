@@ -27,6 +27,8 @@ find_package(Qt6 REQUIRED COMPONENTS
     PrintSupport
 )
 
+add_subdirectory(src/Model/Baseline)
+
 # Define sources
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
 message(STATUS "Source files found: ${SOURCES}")
@@ -67,6 +69,7 @@ target_link_libraries(ecg_app PUBLIC
     Qt6::Widgets
     Qt6::PrintSupport
     visualization
+    baseline
 )
 
 # Executable

@@ -1,30 +1,29 @@
 #include "MovingMeanFilter.h"
 #include <cmath>
 
-void MovingMeanFilter::set(int FilterLength)
-{
-    this->filterLength=FilterLength;
+void MovingMeanFilter::set(int filterLength) {
+    this->filterLength = filterLength;
 }
 
 Signal MovingMeanFilter::applyFilter(const Signal& inputSignal) const {
-
-    std::vector<double> oldY = inputSignal.getY;
-    std::vector<double> newY;
+    const std::vector<double>& oldY = inputSignal.getY();
+    std::vector<double> newY(oldY.size());
     double sum = 0;
-    for(int i = 0; i<sizeof(oldY);i++)
-    {
-        if(i<std::floor(filterLength/2) or (sizeof(oldY) - i)<std::floor(filterLength/2)) {
+
+    for(size_t i = 0; i < oldY.size(); i++) {
+        if(i < std::floor(filterLength/2) || (oldY.size() - i) <= std::floor(filterLength/2)) {
             newY[i] = oldY[i];
         }
-        else
-        {
-            for(int j = std::floor(i-filterLength/2);i<=std::floor(i+filterLength/2);i++)
-                sum+=oldY[j];
-
-            newY[i] = sum/filterLength;
+        else {
             sum = 0;
+            for(int j = std::floor(i-filterLength/2); j <= std::floor(i+filterLength/2); j++) {
+                sum += oldY[j];
+            }
+            newY[i] = sum/filterLength;
         }
-            
     }
-    inputSignal::SetY(newY);
+
+    Signal outputSignal = inputSignal; // Create copy
+    outputSignal.setY(newY);
+    return outputSignal;
 }

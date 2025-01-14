@@ -1,41 +1,32 @@
-# Copyright 2017-2018 CNRS-UM LIRMM
-# Copyright 2017-2018 Arnaud TANGUY <arnaud.tanguy@lirmm.fr>
+cmake_minimum_required(VERSION 3.10)
 
-cmake_minimum_required(VERSION 3.1)
+project(gram_savitzky_golay VERSION 1.0 LANGUAGES CXX)
 
-set(PROJECT_NAME gram_savitzky_golay)
-set(PROJECT_DESCRIPTION "Implementation of Savitzky-Golay Filtering using Peter A. Gory Gram Polynomials method")
-set(PROJECT_URL "https://github.com/arntanguy/gram_savitzky_golay")
-set(PROJECT_VERSION 1.0)
-set(PROJECT_DEBUG_POSTFIX "_d")
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(PROJECT_USE_KEYWORD_LINK_LIBRARIES TRUE)
-set(PROJECT_USE_CMAKE_EXPORT TRUE)
-set(DOXYGEN_USE_MATHJAX "YES")
-set(CXX_DISABLE_WERROR 1)
 set(CMAKE_CXX_STANDARD 11)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-option(BUILD_TESTS "Build unit tests" ON)
+# Find required packages
+find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED)
 
-include(cmake/base.cmake)
-include(cmake/msvc-specific.cmake)
+# Create library
+add_library(gram_savitzky_golay STATIC
+    src/gram_savitzky_golay.cpp
+    src/spatial_filters.cpp
+)
 
-project(${PROJECT_NAME} LANGUAGES CXX)
+# Include directories
+target_include_directories(gram_savitzky_golay
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${EIGEN3_INCLUDE_DIR}
+        ${Boost_INCLUDE_DIRS}
+)
 
-# For MSVC, set local environment variable to enable finding the built dll
-# of the main library when launching ctest with RUN_TESTS
-if(MSVC)
-  set(CMAKE_MSVCIDE_RUN_PATH "\$(SolutionDir)/src/\$(Configuration)")
-endif()
-
-
-add_project_dependency(Eigen3 REQUIRED PKG_CONFIG_REQUIRES eigen3)
-add_project_dependency(Boost REQUIRED)
-add_subdirectory(src)
-
-if(BUILD_TESTS)
-  find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-  enable_testing()
-  add_subdirectory(tests)
-endif()
+# Link dependencies
+target_link_libraries(gram_savitzky_golay
+    PUBLIC
+        Eigen3::Eigen
+        Boost::boost
+)
