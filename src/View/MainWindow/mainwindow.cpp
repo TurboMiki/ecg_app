@@ -10,12 +10,14 @@
 #include "SavitzkyGolayFilter.h"
 #include "LMSFilter.h"
 
-
+#include <algorithm>
 #include <QDebug>
 #include <QFileDialog>
 #include <QVBoxLayout>
 #include <QMessageBox>
 #include <exception>
+#include <QProgressDialog>
+#include <QElapsedTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -176,35 +178,72 @@ void MainWindow::on_btnFECG_clicked()
     }
 
     try {
+        // Show processing dialog
+        QProgressDialog progress("Processing signal...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+        
         // Get the input signal
         Signal inputSignal = fileReader.read_MLII();
-
-        // Create and apply Butterworth filter
-        auto butterworthFilter = std::make_unique<ButterworthFilter>();
-        butterworthFilter->set(4, 0.5, 40.0);  // 4th order, bandpass 0.5-40Hz
-        baseline.setFilter(std::move(butterworthFilter));
-        Signal filteredSignal = baseline.filterSignal(inputSignal);
-
-        // Ensure frame_2 has a layout
-        QLayout* layout = ui->frame_2->layout();
-        if (!layout) {
-            layout = new QVBoxLayout(ui->frame_2);
-            ui->frame_2->setLayout(layout);
+        progress.setValue(20);
+        
+        if (inputSignal.getY().empty()) {
+            QMessageBox::warning(this, "Warning", "Input signal is empty!");
+            return;
         }
 
-        // Clear any existing widgets in the layout
-        QLayoutItem* child;
-        while ((child = layout->takeAt(0)) != nullptr) {
-            delete child->widget();
-            delete child;
-        }
+        // Create LMS filter
+        auto lmsFilter = std::make_unique<LMSFilter>();
+        progress.setValue(40);
 
-        // Create and add filtered signal plot
-        Basic_Plot* filteredPlotWidget = new Basic_Plot();
-        layout->addWidget(filteredPlotWidget);
-        QVector<int> highlights;
-        filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
-            "Butterworth Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+        try {
+            // Create a reference signal (in this case, let's use a delayed version of the input)
+            Signal refSignal = inputSignal;  // Create copy
+            std::vector<double> refY = refSignal.getY();
+            
+            // Shift the reference signal by a few samples
+            const int delay = 5;
+            std::rotate(refY.begin(), refY.begin() + delay, refY.end());
+            refSignal.setY(refY);
+            
+            // Apply adaptive filtering
+            Signal filteredSignal = lmsFilter->adaptiveFilter(inputSignal, refSignal);
+            progress.setValue(60);
+
+            if (filteredSignal.getY().empty()) {
+                QMessageBox::warning(this, "Warning", "Filtering resulted in empty signal!");
+                return;
+            }
+
+            // Ensure frame_2 has a layout
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+            progress.setValue(80);
+
+            // Clear any existing widgets in the layout
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create and add filtered signal plot
+            Basic_Plot* filteredPlotWidget = new Basic_Plot();
+            layout->addWidget(filteredPlotWidget);
+            QVector<int> highlights;
+            filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
+                "LMS Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+            progress.setValue(100);
+
+        } catch (const std::exception& e) {
+            QMessageBox::critical(this, "Error", 
+                QString("Filter application failed: %1").arg(e.what()));
+            return;
+        }
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
