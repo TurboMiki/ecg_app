@@ -16,5 +16,5 @@ public:
     void setFilter(std::unique_ptr<Filter> newFilter);
     Signal filterSignal(const Signal& inputSignal);
     Signal getSignal() const;
+    Filter* getFilter() { return filter.get(); }
 };
-

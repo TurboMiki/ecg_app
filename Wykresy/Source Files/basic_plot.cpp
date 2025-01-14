@@ -1,73 +1,84 @@
 #include "basic_plot.h"
-#include <QString>
+#include <QVBoxLayout>
+#include <algorithm>
 
 Basic_Plot::Basic_Plot(QWidget *parent)
     : QWidget(parent),
-    customPlot(new QCustomPlot(this))  // Inicjalizacja obiektu QCustomPlot
+    customPlot(new QCustomPlot(this))
 {
-    customPlot->setGeometry(10, 10, 800, 600);  // Ustawienie rozmiaru wykresu w widgetzie
+    // Create layout and add QCustomPlot to it
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(customPlot);
+    setLayout(layout);
 
+    // Setup the plot
     customPlot->addGraph();
     customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::blue, 1));
     customPlot->graph(0)->setLineStyle(QCPGraph::lsLine);
 
-
-    // Włączenie legendy
+    // Enable legend
     customPlot->legend->setVisible(true);
     customPlot->legend->setFont(QFont("Helvetica", 9));
     customPlot->legend->setBrush(QBrush(Qt::white));
     customPlot->legend->setBorderPen(QPen(Qt::black));
 
-    // Ustawienia interakcji z wykresem
+    // Setup interactions
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
     customPlot->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     customPlot->axisRect()->setRangeZoom(Qt::Horizontal | Qt::Vertical);
 }
 
-
-
-
 Basic_Plot::~Basic_Plot()
 {
-    delete customPlot;  // Zwolnienie pamięci
+    // QCustomPlot will be automatically deleted by Qt parent-child mechanism
 }
 
 void Basic_Plot::setTitle(const QString& title)
 {
-    QCPTextElement *titleElement = new QCPTextElement(customPlot, title, QFont("Helvetica", 16, QFont::Bold));
-    customPlot->plotLayout()->insertRow(0);  // Dodanie wiersza nad wykresem
+    if (customPlot->plotLayout()->elementCount() > 0)
+    {
+        if (qobject_cast<QCPTextElement*>(customPlot->plotLayout()->element(0, 0)))
+            customPlot->plotLayout()->remove(customPlot->plotLayout()->element(0, 0));
+    }
+    
+    QCPTextElement *titleElement = new QCPTextElement(customPlot, title, QFont("Helvetica", 12, QFont::Bold));
+    customPlot->plotLayout()->insertRow(0);
     customPlot->plotLayout()->addElement(0, 0, titleElement);
 }
 
-void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices,const QString& legend , const QString& title, const QString& xtitle, const QString& ytitle)
+void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices, const QString& legend, const QString& title, const QString& xtitle, const QString& ytitle)
 {
-    QVector<double> x, y;
-    for (double value : signal.getX()) {
-        x.append(value);
-    }
+    // Convert std::vector to QVector
+    QVector<double> x(signal.getX().begin(), signal.getX().end());
+    QVector<double> y(signal.getY().begin(), signal.getY().end());
 
-    for (double value : signal.getY()) {
-        y.append(value);
-    }
-
-    customPlot->clearGraphs();  // Usuwanie poprzednich wykresów
-    customPlot->addGraph();     // Dodanie nowego wykresu
-    customPlot->graph(0)->setData(x, y);  // Ustawienie danych
-    customPlot->graph(0)->setName(title); // Ustawienie nazwy wykresu
+    customPlot->clearGraphs();
+    customPlot->addGraph();
+    customPlot->graph(0)->setData(x, y);
+    customPlot->graph(0)->setName(legend);
+    
+    // Set axis labels
     customPlot->xAxis->setLabel(xtitle);
     customPlot->yAxis->setLabel(ytitle);
 
-    double minY = *std::min_element(y.begin(), y.end());
-    double maxY = *std::max_element(y.begin(), y.end());
-    customPlot->yAxis->setRange(minY - 0.1, maxY + 0.1);
+    // Calculate y axis range with some margin
+    auto [minIt, maxIt] = std::minmax_element(y.begin(), y.end());
+    double yMin = *minIt;
+    double yMax = *maxIt;
+    double margin = (yMax - yMin) * 0.1; // 10% margin
+    customPlot->yAxis->setRange(yMin - margin, yMax + margin);
 
+    // Set x axis range
+    if (!x.empty()) {
+        customPlot->xAxis->setRange(x.front(), x.back());
+    }
+
+    // Add highlighted points if any
     if (!highlightIndices.isEmpty()) {
-        // Jeśli wykres do wyróżnienia nie istnieje, dodaj go
-        if (customPlot->graphCount() < 2) {
-            customPlot->addGraph();
-            customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::red, 10));
-            customPlot->graph(1)->setLineStyle(QCPGraph::lsNone);            // Czerwone kółka
-        }
+        customPlot->addGraph();
+        customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::red, 10));
+        customPlot->graph(1)->setLineStyle(QCPGraph::lsNone);
 
         QVector<double> highlightX, highlightY;
         for (int index : highlightIndices) {
@@ -77,13 +88,10 @@ void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highl
             }
         }
 
-        customPlot->graph(1)->setData(highlightX, highlightY);  // Ustawienie wyróżnionych punktów
-        customPlot->graph(1)->setName(legend);
+        customPlot->graph(1)->setData(highlightX, highlightY);
+        customPlot->graph(1)->setName("Highlights");
     }
 
-    setTitle(title);  // Ustawienie tytułu wykresu
-    customPlot->replot();  // Rysowanie wykresu
+    setTitle(title);
+    customPlot->replot();
 }
-
-
-
