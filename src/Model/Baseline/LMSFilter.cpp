@@ -1,5 +1,5 @@
 #include "LMSFilter.h"
-#include "AdaptiveFilter.h"
+#include "../LMS/src/AdaptiveFilter.h"
 #include <stdexcept>
 
 LMSFilter::LMSFilter() {

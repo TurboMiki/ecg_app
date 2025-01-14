@@ -1,7 +1,16 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "settingsform.h"
+
 #include "basic_plot.h"
+
+
+#include "MovingMeanFilter.h"
+#include "ButterworthFilter.h"
+#include "SavitzkyGolayFilter.h"
+#include "LMSFilter.h"
+
+
 #include <QDebug>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -86,13 +95,14 @@ void MainWindow::on_btnPath_clicked()
 
 void MainWindow::on_btnRaw_clicked()
 {
-
     if (ui->linePath->text().isEmpty()) {
         QMessageBox::warning(this, "Warning", "Please select a file first!");
         return;
     }
 
     try {
+        // Get the input signal from file reader
+        Signal inputSignal = fileReader.read_MLII();
         
         // Ensure frame_2 has a layout
         QLayout* layout = ui->frame_2->layout();
@@ -101,8 +111,19 @@ void MainWindow::on_btnRaw_clicked()
             ui->frame_2->setLayout(layout);
         }
 
-        // Call createPlot with the desired plot type
-        createPlot(layout, PLOT_TYPE::RAW_PLOT);
+        // Clear any existing widgets in the layout
+        QLayoutItem* child;
+        while ((child = layout->takeAt(0)) != nullptr) {
+            delete child->widget();
+            delete child;
+        }
+
+        // Create and add plot
+        Basic_Plot* plotWidget = new Basic_Plot();
+        layout->addWidget(plotWidget);
+        QVector<int> highlights;
+        plotWidget->updateBasicPlot(inputSignal, highlights, 
+            "Raw ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
@@ -112,6 +133,7 @@ void MainWindow::on_btnRaw_clicked()
             "An unknown error occurred while processing the data.");
     }
 }
+
 void MainWindow::on_pushButton_clicked()
 {
     QWidget *newWindow = new QWidget();
@@ -146,3 +168,49 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
     }
 }
 
+void MainWindow::on_btnFECG_clicked()
+{
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Get the input signal
+        Signal inputSignal = fileReader.read_MLII();
+
+        // Create and apply Butterworth filter
+        auto butterworthFilter = std::make_unique<ButterworthFilter>();
+        butterworthFilter->set(4, 0.5, 40.0);  // 4th order, bandpass 0.5-40Hz
+        baseline.setFilter(std::move(butterworthFilter));
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+
+        // Ensure frame_2 has a layout
+        QLayout* layout = ui->frame_2->layout();
+        if (!layout) {
+            layout = new QVBoxLayout(ui->frame_2);
+            ui->frame_2->setLayout(layout);
+        }
+
+        // Clear any existing widgets in the layout
+        QLayoutItem* child;
+        while ((child = layout->takeAt(0)) != nullptr) {
+            delete child->widget();
+            delete child;
+        }
+
+        // Create and add filtered signal plot
+        Basic_Plot* filteredPlotWidget = new Basic_Plot();
+        layout->addWidget(filteredPlotWidget);
+        QVector<int> highlights;
+        filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
+            "Butterworth Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process data: %1").arg(e.what()));
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred while processing the data.");
+    }
+}

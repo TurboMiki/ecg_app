@@ -5,6 +5,7 @@
 #include <QStringList>
 #include "settingsform.h"
 #include <DataReader.h>
+#include <Baseline.h>
 #include "basic_plot.h"
 
 enum class PLOT_TYPE{
@@ -32,8 +33,10 @@ private slots:
     void get_settings(const QStringList &data);
     void write_settings(const QStringList &data);
     void debug_settings();
+
     void on_btnPath_clicked();
     void on_btnRaw_clicked();
+    void on_btnFECG_clicked();
 
     void on_pushButton_clicked();
 
@@ -43,14 +46,17 @@ private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;
     Basic_Plot *plotWidget;
+    
     QString parameter1;
     QString parameter2;
     QString parameter3;
     QString parameter4;
     QString parameter5;
     QString filePath;
+
     DataReader fileReader;
     PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
+    Baseline baseline;
 };
 
 #endif // MAINWINDOW_H
