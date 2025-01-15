@@ -4,7 +4,6 @@
 
 #include "basic_plot.h"
 
-
 #include "MovingMeanFilter.h"
 #include "ButterworthFilter.h"
 #include "SavitzkyGolayFilter.h"
@@ -27,8 +26,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // Set icons
-    ui->START->setIcon(QIcon(":/icons/play.png"));
-    ui->Config->setIcon(QIcon(":/icons/gear.png"));
+    //ui->START->setIcon(QIcon(":/icons/play.png"));
+    //ui->Config->setIcon(QIcon("C:/Projects/ecg_app_GUI/src/View/MainWindow/icons/gear.png"));
+    //ui->START->setIconSize(QSize(50, 50));
 
     // Initialize SettingsForm
     ptrSettingsForm = new SettingsForm(this);
@@ -93,6 +93,7 @@ void MainWindow::on_btnPath_clicked()
     }
     fileReader.setPath(ui->linePath->text().toStdString());
     fileReader.readFile();
+    fileReader.write_measured_time(); 
 }
 
 void MainWindow::on_btnRaw_clicked()
@@ -170,6 +171,91 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
     }
 }
 
+void MainWindow::on_checkBoxRP_stateChanged(int state)
+{
+    if (state == Qt::Checked) {
+        try {
+            qDebug() << "Starting R-peaks detection...";
+            
+            // Get and filter the signal
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            // Detect R-peaks using Pan-Tompkins
+            std::vector<int> peaks;
+            // rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+            
+            if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                qDebug() << "R-peaks detection successful";
+                qDebug() << "Total peaks detected:" << peaks.size();
+                
+                // Convert peaks to QList
+                r_peak_positions.clear();
+                r_peak_positions.reserve(peaks.size());
+                for (const auto& peak : peaks) {
+                    r_peak_positions.append(peak);
+                }
+
+                // Update the plot
+                QLayout* layout = ui->frame_2->layout();
+                if (!layout) {
+                    layout = new QVBoxLayout(ui->frame_2);
+                    ui->frame_2->setLayout(layout);
+                }
+
+                // Clear existing widgets
+                QLayoutItem* child;
+                while ((child = layout->takeAt(0)) != nullptr) {
+                    delete child->widget();
+                    delete child;
+                }
+
+                // Create new plot with R-peaks highlighted
+                Basic_Plot* plotWidget = new Basic_Plot();
+                layout->addWidget(plotWidget);
+                plotWidget->updateBasicPlot(filteredSignal, r_peak_positions,
+                    "Moving Mean Filtered ECG Signal with R-peaks", "ECG Signal (MLII)", 
+                    "Time [s]", "Voltage [mV]");
+            }
+        } catch (const std::exception& e) {
+            qDebug() << "Error during R-peaks detection:" << e.what();
+            ui->checkBoxRP->setChecked(false);
+        }
+    } else {
+        // When unchecked, clear R-peaks and redraw
+        r_peak_positions.clear();
+        
+        try {
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new plot without R-peaks
+            Basic_Plot* plotWidget = new Basic_Plot();
+            layout->addWidget(plotWidget);
+            QList<int> empty_highlights;
+            plotWidget->updateBasicPlot(filteredSignal, empty_highlights,
+                "Moving Mean Filtered ECG Signal", "ECG Signal (MLII)", 
+                "Time [s]", "Voltage [mV]");
+        } catch (const std::exception& e) {
+            qDebug() << "Error updating plot:" << e.what();
+        }
+    }
+}
+
 void MainWindow::on_btnFECG_clicked()
 {
     if (ui->linePath->text().isEmpty()) {
@@ -193,28 +279,23 @@ void MainWindow::on_btnFECG_clicked()
             return;
         }
 
-        // Create LMS filter
-        auto lmsFilter = std::make_unique<LMSFilter>();
+        // Create and apply Moving Mean filter
+        auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
+        movingMeanFilter->set(3);  // window length of 15 points
         progress.setValue(40);
 
         try {
-            // Create a reference signal (in this case, let's use a delayed version of the input)
-            Signal refSignal = inputSignal;  // Create copy
-            std::vector<double> refY = refSignal.getY();
-            
-            // Shift the reference signal by a few samples
-            const int delay = 5;
-            std::rotate(refY.begin(), refY.begin() + delay, refY.end());
-            refSignal.setY(refY);
-            
-            // Apply adaptive filtering
-            Signal filteredSignal = lmsFilter->adaptiveFilter(inputSignal, refSignal);
+            baseline.setFilter(std::move(movingMeanFilter));
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
             progress.setValue(60);
 
             if (filteredSignal.getY().empty()) {
                 QMessageBox::warning(this, "Warning", "Filtering resulted in empty signal!");
                 return;
             }
+
+            // Use current R-peaks if they exist
+            QList<int> highlights = r_peak_positions;
 
             // Ensure frame_2 has a layout
             QLayout* layout = ui->frame_2->layout();
@@ -234,9 +315,8 @@ void MainWindow::on_btnFECG_clicked()
             // Create and add filtered signal plot
             Basic_Plot* filteredPlotWidget = new Basic_Plot();
             layout->addWidget(filteredPlotWidget);
-            QVector<int> highlights;
             filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
-                "LMS Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+                "Moving Mean Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
             progress.setValue(100);
 
         } catch (const std::exception& e) {
