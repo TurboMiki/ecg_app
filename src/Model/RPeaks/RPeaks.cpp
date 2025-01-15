@@ -158,7 +158,7 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
 
     // Integracja ruchomego okna
     if (pan_tompkins_window_length == 0) {
-        pan_tompkins_window_length = static_cast<int>(0.012 * signal_frequency);
+        pan_tompkins_window_length = static_cast<int>(0.13 * signal_frequency);
     }
     std::vector<double> integrated_signal(squared_signal.size() - pan_tompkins_window_length + 1);
     for (size_t i = 0; i < integrated_signal.size(); ++i) {
@@ -169,12 +169,17 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
     // Ustalenie progu
     double max_val = *std::max_element(integrated_signal.begin(), integrated_signal.end());
     double mean_val = std::accumulate(integrated_signal.begin(), integrated_signal.end(), 0.0) / integrated_signal.size();
-    double threshold = (0.6 * mean_val + 0.4 * max_val);
+
+    if (pan_tompkins_threshold == 0) {
+        pan_tompkins_threshold = (0.6 * mean_val + 0.4 * max_val);
+    }
 
     // Detekcja załamków
     for (size_t i = 1; i < integrated_signal.size() - 1; ++i) {
-        if (integrated_signal[i] > threshold && integrated_signal[i] > integrated_signal[i - 1] &&
-            integrated_signal[i] > integrated_signal[i + 1]) {
+        if (integrated_signal[i] > pan_tompkins_threshold &&
+            integrated_signal[i] > integrated_signal[i - 1] &&
+            integrated_signal[i] > integrated_signal[i + 1] &&
+            signal[i] > 0) { // Tylko dodatnie piki
             r_peaks.push_back(i);
         }
     }
