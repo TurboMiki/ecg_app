@@ -26,8 +26,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // Set icons
-    ui->START->setIcon(QIcon(":/icons/play.png"));
-    ui->Config->setIcon(QIcon(":/icons/gear.png"));
+    //ui->START->setIcon(QIcon(":/icons/play.png"));
+    //ui->Config->setIcon(QIcon("C:/Projects/ecg_app_GUI/src/View/MainWindow/icons/gear.png"));
+    //ui->START->setIconSize(QSize(50, 50));
 
     // Initialize SettingsForm
     ptrSettingsForm = new SettingsForm(this);
