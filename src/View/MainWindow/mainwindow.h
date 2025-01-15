@@ -3,9 +3,11 @@
 
 #include <QMainWindow>
 #include <QStringList>
-#include "settingsform.h"
 #include <DataReader.h>
 #include <Baseline.h>
+
+#include "RPeaks.h"
+#include "settingsform.h"
 #include "basic_plot.h"
 
 enum class PLOT_TYPE{
@@ -37,6 +39,7 @@ private slots:
     void on_btnPath_clicked();
     void on_btnRaw_clicked();
     void on_btnFECG_clicked();
+    void on_checkBoxRP_stateChanged(int state);
 
     void on_pushButton_clicked();
 
@@ -57,6 +60,9 @@ private:
     DataReader fileReader;
     PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
     Baseline baseline;
+    RPeaks rPeaks;
+    QList<int> r_peak_positions;
+
 };
 
 #endif // MAINWINDOW_H
