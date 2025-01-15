@@ -279,7 +279,7 @@ void MainWindow::on_btnFECG_clicked()
 
         // Create and apply Moving Mean filter
         auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
-        movingMeanFilter->set(15);  // window length of 15 points
+        movingMeanFilter->set(3);  // window length of 15 points
         progress.setValue(40);
 
         try {
