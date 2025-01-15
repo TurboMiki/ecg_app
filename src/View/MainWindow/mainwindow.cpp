@@ -93,6 +93,7 @@ void MainWindow::on_btnPath_clicked()
     }
     fileReader.setPath(ui->linePath->text().toStdString());
     fileReader.readFile();
+    fileReader.write_measured_time(); 
 }
 
 void MainWindow::on_btnRaw_clicked()
