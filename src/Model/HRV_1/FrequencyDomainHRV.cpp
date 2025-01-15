@@ -6,16 +6,10 @@
 
 
   double FrequencyDomainHRV::calculateHF() const{
-        double Power = 0.0;
-        double Min = 0.15;
-        double Max = 0.4;
+        double min = 0.15;
+        double max = 0.4;
 
-        for (size_t i = 0; i < frequencies_.size(); i++){
-            if(frequencies_[i] >= Min && frequencies_[i] <= Max){
-                Power += periodogram_[i] * (frequencies_[i+1] - frequencies_[i]);
-            }
-        }
-
+        return calculatePower(min,max);  
  }
 
   double FrequencyDomainHRV::calculateLF() const{
