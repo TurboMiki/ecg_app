@@ -3,7 +3,7 @@
 
 // class constructor
 
-HRV_1::HRV_1(const Signal& rpeaks, const Signal& ecg) : TimeDomainHRV(rpeaks), FrequencyDomainHRV(signal) {}
+HRV_1::HRV_1(const Signal& rpeaks, const Signal& ecg) : TimeDomainHRV(rpeaks), FrequencyDomainHRV(ecg) {}
 // HRV 1 process function
 void HRV_1::process(){
     // time parameters
@@ -36,7 +36,6 @@ void HRV_1::process(){
     freqParams_[5] = lfhf;
 
 }
-
 
 // HRV 1 get time parameters
 std::array<double, 5> HRV_1::getTimeParams() const{return timeParams_;}

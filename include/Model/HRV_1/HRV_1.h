@@ -16,3 +16,4 @@ private:
     std::array<double, 5> timeParams_;
     std::array<double, 6> freqParams_;
 };
+
