@@ -6,7 +6,8 @@
     - git pull
     - git checkout main
     - git branch *nazwa twojego nowego bracha*
-    - mkdir build
+    - sprawdź, czy istnieje folder build - po prostu wpisz ls i sprawdź czy istnieje folder o nazwie build. Jeśli nie:
+        - mkdir build
     - docker builder prune
     - docker system prune -a --volumes
 4. Uruchom serwer XServer:
