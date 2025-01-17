@@ -15,6 +15,7 @@ RUN sudo apt-get update && sudo apt-get install -y \
     libxkbcommon-x11-dev \
     libx11-xcb-dev \
     libxcb-*-dev \
+    libcups2-dev \
     && sudo rm -rf /var/lib/apt/lists/*
 
 # Create and set proper permissions for project directory
@@ -63,6 +64,7 @@ RUN apt-get update && \
     libxcb-*0 \
     mesa-utils \
     xvfb \
+    libcups2 \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /tmp/runtime-root \
     && chmod 700 /tmp/runtime-root
