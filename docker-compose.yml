@@ -5,7 +5,7 @@ services:
       target: builder
     volumes:
       - ./:/home/user/project:ro
-      - ${PWD}/build:/home/user/project/build
+      - ./build:/home/user/project/build
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=1
@@ -18,7 +18,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     user: user
-    command: sh -c "qt-cmake . -G Ninja -B ./build && cmake --build ./build && ./build/ECGProcessing"
+    command: sh -c "mkdir -p ./build && qt-cmake . -G Ninja -B ./build && cmake --build ./build && ./build/ECGProcessing"
 
   qt-designer:
     build:
@@ -26,7 +26,7 @@ services:
       target: builder
     volumes:
       - ./:/home/user/project:rw
-      - ${PWD}/build:/home/user/project/build
+      - ./build:/home/user/project/build
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=1
@@ -61,6 +61,6 @@ services:
       target: builder
     volumes:
       - ./:/home/user/project:ro
-      - ${PWD}/build:/home/user/project/build
+      - ./build:/home/user/project/build
     user: user
     command: sh -c "cd build && ctest --output-on-failure"
