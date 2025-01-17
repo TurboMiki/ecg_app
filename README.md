@@ -31,7 +31,10 @@ This application is containerized using Docker for easy development and deployme
    - Check these options:
      - "Disable access control"
      - "Native opengl"
-   - Save the configuration (optional but recommended)
+   - Save the configuration (optional but recommended) -> Config for this is already provided inside project direcotry
+   ```bash
+   config.xlaunch
+   ```
 
 2. Clone the repository:
    ```bash
@@ -47,7 +50,7 @@ This application is containerized using Docker for easy development and deployme
    > CANCELED [qt-designer internal] load metadata for docker.io/stateoftheartio/qt6:6.8-gcc-aqt                                                                                0.1s
 
    > failed to solve: target stage "runtime" could not be found
-   
+
 If build completes, despite the error just continue with further instructions.
 
 ## Running the Application

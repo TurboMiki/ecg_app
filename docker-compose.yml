@@ -4,8 +4,8 @@ services:
       context: .
       target: builder
     volumes:
-      - .:/home/user/project:ro
-      - build-cache:/home/user/project/build
+      - ./:/home/user/project:ro
+      - ${PWD}/build:/home/user/project/build
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=1
@@ -25,7 +25,8 @@ services:
       context: .
       target: builder
     volumes:
-      - .:/home/user/project:rw  # Changed to rw to allow saving UI files
+      - ./:/home/user/project:rw
+      - ${PWD}/build:/home/user/project/build
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=1
@@ -59,10 +60,7 @@ services:
       context: .
       target: builder
     volumes:
-      - .:/home/user/project:ro
-      - build-cache:/home/user/project/build
+      - ./:/home/user/project:ro
+      - ${PWD}/build:/home/user/project/build
     user: user
     command: sh -c "cd build && ctest --output-on-failure"
-
-volumes:
-  build-cache:
