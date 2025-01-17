@@ -256,6 +256,8 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
     }
 }
 
+void MainWindow::on_checkBoxQRS_stateChanged()
+
 void MainWindow::on_btnFECG_clicked()
 {
     if (ui->linePath->text().isEmpty()) {
