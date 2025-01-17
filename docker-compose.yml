@@ -20,6 +20,29 @@ services:
     user: user
     command: sh -c "mkdir -p ./build && qt-cmake . -G Ninja -B ./build && cmake --build ./build && ./build/ECGProcessing"
 
+  qt-creator:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./:/home/user/project:rw
+      - ./build:/home/user/project/build
+      - qt-creator-home:/home/user/.config/QtProject
+      - qt-creator-cache:/home/user/.cache/QtProject
+    environment:
+      - DISPLAY=host.docker.internal:0.0
+      - LIBGL_ALWAYS_INDIRECT=1
+      - QT_X11_NO_MITSHM=1
+      - QT_QPA_PLATFORM=xcb
+      - QT_DEBUG_PLUGINS=1
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    user: user
+    entrypoint: sh -c "mkdir -p /home/user/.config/QtProject && mkdir -p /home/user/.cache/QtProject && qtcreator"
+
   qt-designer:
     build:
       context: .
@@ -64,3 +87,7 @@ services:
       - ./build:/home/user/project/build
     user: user
     command: sh -c "cd build && ctest --output-on-failure"
+
+volumes:
+  qt-creator-home:
+  qt-creator-cache:
