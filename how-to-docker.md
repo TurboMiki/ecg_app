@@ -21,4 +21,5 @@
     - docker compose build --no-cache
     - docker compose up ecg-dev
 6. Powinno otworzyć się okno z aplikacją i systemem plików kontenera
-7. Jeśli cokolwiek nie działa, pisz do Mikołaja albo na grupce
+7. Przy kolejnym uruchomieniu powinno wystarczyć wpisanie z terminala docker compose up ecg-dev, lub uruchomienie kontenera z UI docker desktop
+8. Jeśli cokolwiek nie działa, pisz do Mikołaja albo na grupce
