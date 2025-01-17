@@ -3,6 +3,8 @@ build/*
 CMakeLists.txt.user
 100.dat
 .qtcreator/config/*
+.qtcreator\config\QtCreator.db
+.qtcreator\config\QtCreator.ini
 .qtcreator/config/QtCreator.ini
 .qtcreator/config/qtcreator/devices.xml
 .qtcreator/config/qtcreator/profiles.xml
