@@ -93,6 +93,7 @@ void MainWindow::on_btnPath_clicked()
     }
     fileReader.setPath(ui->linePath->text().toStdString());
     fileReader.readFile();
+    fileReader.write_measured_time(); 
 }
 
 void MainWindow::on_btnRaw_clicked()
@@ -182,9 +183,10 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             
             // Detect R-peaks using Pan-Tompkins
             std::vector<int> peaks;
-            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            // rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
             
-            if (rPeaks.detectRPeaks(filteredSignal.getY(), 360.0, peaks)) {
+            if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                 qDebug() << "R-peaks detection successful";
                 qDebug() << "Total peaks detected:" << peaks.size();
                 
@@ -279,7 +281,7 @@ void MainWindow::on_btnFECG_clicked()
 
         // Create and apply Moving Mean filter
         auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
-        movingMeanFilter->set(15);  // window length of 15 points
+        movingMeanFilter->set(3);  // window length of 15 points
         progress.setValue(40);
 
         try {
