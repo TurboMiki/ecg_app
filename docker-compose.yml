@@ -27,8 +27,8 @@ services:
     volumes:
       - ./:/home/user/project:rw
       - ./build:/home/user/project/build
-      - qt-creator-home:/home/user/.config/QtProject
-      - qt-creator-cache:/home/user/.cache/QtProject
+      - ./.qtcreator/config:/home/user/.config/QtProject:rw
+      - ./.qtcreator/cache:/home/user/.cache/QtProject:rw
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=1
@@ -40,8 +40,18 @@ services:
       - LC_ALL=C.UTF-8
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    user: user
-    entrypoint: sh -c "mkdir -p /home/user/.config/QtProject && mkdir -p /home/user/.cache/QtProject && qtcreator"
+    user: "1000:1000"  # Explicit UID:GID
+    command: qtcreator
+
+  qt-creator-init:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./.qtcreator/config:/home/user/.config/QtProject
+      - ./.qtcreator/cache:/home/user/.cache/QtProject
+    user: root
+    command: sh -c "mkdir -p /home/user/.config/QtProject/qtcreator && mkdir -p /home/user/.cache/QtProject && chown -R 1000:1000 /home/user/.config/QtProject && chown -R 1000:1000 /home/user/.cache/QtProject && chmod -R 755 /home/user/.config/QtProject && chmod -R 755 /home/user/.cache/QtProject"
 
   qt-designer:
     build:
@@ -87,7 +97,3 @@ services:
       - ./build:/home/user/project/build
     user: user
     command: sh -c "cd build && ctest --output-on-failure"
-
-volumes:
-  qt-creator-home:
-  qt-creator-cache:

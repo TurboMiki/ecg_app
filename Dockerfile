@@ -19,9 +19,16 @@ RUN sudo apt-get update && sudo apt-get install -y \
     qtcreator \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# Create and set proper permissions for project directory
+# Create and set proper permissions for project directory and Qt Creator configs
 USER root
-RUN mkdir -p /home/user/project && chown -R user:user /home/user/project
+RUN mkdir -p /home/user/project && \
+    mkdir -p /home/user/.config/QtProject/qtcreator && \
+    mkdir -p /home/user/.cache/QtProject && \
+    chown -R user:user /home/user/project && \
+    chown -R user:user /home/user/.config && \
+    chown -R user:user /home/user/.cache && \
+    chmod -R 755 /home/user/.config && \
+    chmod -R 755 /home/user/.cache
 USER user
 
 WORKDIR /home/user/project
