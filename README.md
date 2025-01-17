@@ -1,169 +1,112 @@
+# ECG Processing Application
 
-# **ECG App**
-> Main project for DADM  
+This application is containerized using Docker for easy development and deployment.
 
----
+## Prerequisites
 
-## **Witam wszystkich! 👋**  
-W tym pliku znajdziecie wszystkie potrzebne informacje oraz instrukcje.  
-W razie <span style="color: #82e332"><strong>problemów</strong></span> bądź jakichkolwiek <span style="color: #eec634"><strong>pytań/nieścisłości</strong></span> prosze pisać do mnie lub Witka na priv.
+### Windows Users
+1. Install Docker Desktop
+2. Install VcXsrv Windows X Server:
+   - Download from: https://sourceforge.net/projects/vcxsrv/
+   - Or install via winget: `winget install marha.VcXsrv`
 
----
+### Linux Users
+1. Install Docker and Docker Compose
+2. X11 is usually pre-installed
 
-## **Instalacja środowiska**
-Aby pracować w C/C++, potrzebny jest kompilator. Oto kilka sposobów, jak go zainstalować:  
+### macOS Users
+1. Install Docker Desktop
+2. Install XQuartz:
+   ```bash
+   brew install --cask xquartz
+   ```
 
-### **Windows**  
-1. **MinGW**  
-   Najpopularniejszy wybór.  
-   ➡️ [Tutorial z VS Code](https://code.visualstudio.com/docs/cpp/config-mingw)  
-2. **Visual Studio**  
-   Jeśli masz zainstalowane Visual Studio, kompilator jest już dostępny.  
-3. **CLion (JetBrains)**  
-   IDE od JetBrains – prawdopodobnie dostępna licencja uczelniana (warto sprawdzić).  
-4. **WSL (Windows Subsystem for Linux)**  
-   Polecane rozwiązanie – instalacja Ubuntu w WSL.  
-   ➡️ [Tutorial z VS Code](https://code.visualstudio.com/docs/cpp/config-wsl)  
+## Setup Instructions
 
----
+### Windows Setup
+1. After installing VcXsrv, launch XLaunch:
+   - Choose "Multiple windows" in the first screen
+   - Set "Display number" to 0
+   - Select "Start no client"
+   - Check these options:
+     - "Disable access control"
+     - "Native opengl"
+   - Save the configuration (optional but recommended)
 
-### **Linux**  
-1. Zainstaluj kompilator za pomocą menedżera pakietów (np. `apt`, `yum`, `dnf`):  
-    ```bash
-    sudo apt update  
-    sudo apt install build-essential  
-    ```  
-2. Zweryfikuj instalację:  
-    ```bash
-    g++ --version  
-    ```  
-    Jeśli komenda zwraca błąd lub nic, coś poszło nie tak.  
+2. Clone the repository:
+   ```bash
+   git clone [repository-url]
+   cd [repository-name]
+   ```
 
----
+3. Build the application:
+   ```bash
+   docker compose build --no-cache
+   ```
 
-### **CMake**  
-CMake jest wymagany do generowania systemów kompilacji:  
-- **Windows**: Pobierz z oficjalnej strony ➡️ [CMake Download](https://cmake.org/download/)  
-- **Szybki tutorial**: [Obejrzyj tutaj](https://www.youtube.com/watch?v=7YcbaupsY8I)  
+## Running the Application
 
-Zweryfikuj instalację:  
-```bash
-cmake --version  
-```  
+1. Make sure your X server (VcXsrv/XQuartz) is running
 
-Nastepnie, jeśli będziesz korzystać ze stworzonego przez mnie pliku `CMakeLists.txt` musisz ustawić zmienną środowiskową *`QT_PATH`* która będzie wskazywać na miejsce instalacji biblioteki *QT*.
-W moim przypadku (WSL) jest to `/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6`. 
+2. Start the application:
+   ```bash
+   docker compose up ecg-dev
+   ```
 
-**Gratulacje! 🎉 Środowisko gotowe!**  
+3. For Qt Designer (UI editing):
+   ```bash
+   docker compose up qt-designer
+   ```
 
----
+4. To run tests:
+   ```bash
+   docker compose up ecg-test
+   ```
 
-## **Struktura plików**
-Struktura projektu wygląda następująco:  
+## Troubleshooting
 
-### **Folder główny: `ecg_app/`**
-#### **`build/`**  
-- Tego filderu możecie nie mieć na swoim branchu, ponieważ każdy musi go sobie samemu zrobić (proszę też sprawdzić czy znajduje się on w `.gitignore`) 
-- Zawiera pliki generowane przez CMake.  
-- Znajduje się tu również plik wykonywalny (exec) generowany w wyniku kompilacji.  
-- Nazwa pliku zależy od ustawień w `CMakeLists.txt`, w segmencie:  
-    ```cmake
-    project(ECGProcessing)
-    ```  
-- Aby uruchomić program:  
-    ```bash
-    ./ECGProcessing  
-    ```  
+### Common Issues
 
-#### **`include/`**  
-- Przechowuje deklaracje (`*.h`).  
-- Znajdziesz tu definicje klas, prototypy funkcji, stałe oraz `#include`.  
-- Informuje kompilator o strukturze kodu bez definiowania szczegółów działania.
+1. "Cannot connect to X server" error:
+   - Verify X server (VcXsrv/XQuartz) is running
+   - Check firewall settings
+   - Restart X server
 
-#### **`src/`**  
-- Przechowuje definicje (`*.cpp`).  
-- Zawiera implementacje metod i funkcji zadeklarowanych w plikach `.h`.  
-- Aby zaimportować deklaracje, użyj:  
-    ```cpp
-    #include "MyClass.h"  
-    ```  
+2. Blank window:
+   - Ensure "Native opengl" is checked in XLaunch settings
+   - Try adding `-ac` to XLaunch arguments
 
-#### **`main.cpp`**  
-- Główny plik aplikacji – punkt wejściowy programu wykonywany w systemie operacyjnym.  
+3. Build cache issues:
+   ```bash
+   # Clear Docker build cache
+   docker builder prune
+   
+   # Remove project's build cache
+   docker volume rm ecg-app_build-cache
+   
+   # Full system cleanup (use with caution)
+   docker system prune -a --volumes
+   ```
 
-#### **`CMakeLists.txt`**  
-- Generator systemu kompilacji dla C++.  
-- Automatycznie generuje pliki i konfiguracje dla kompilatorów.  
-- Zawiera:  
-    - Pliki źródłowe  
-    - Ustawienia kompilatora  
-    - Biblioteki używane w aplikacji  
-    - Ścieżkę do miejsca instalacji biblioteki QT
----
+4. After pulling new changes:
+   ```bash
+   # Rebuild the containers
+   docker compose build --no-cache
+   ```
 
-## **Struktura klas**
+## Development
 
-<span style="color: #fc187c;"><strong>❗Proszę obowiązkowo zapoznać się z tym diagramem:❗</strong></span>
-- Co ma znajdować się w klasie
-- Jakie typy zmiennych ma zawierać/przyjmować/zwracać klasa
+- Source code is mounted in the container at `/home/user/project`
+- Build artifacts are stored in a Docker volume for persistence
+- UI files can be edited using Qt Designer
 
-Poniżej znajduje się diagram przedstawiający strukturę klas:  
+## Project Structure
 
-![Diagram klas](<Screenshot 2024-11-19 224122.png>)  
-
----
-
-## **Testy**
-- Testy należy tworzyć w folderze `tests/`
-- Aby wykonac test należy:
-    - Stworzyć test i dodać go do `CMakeLists.txt` podobnie jak jest to zrobione dla `test_signal.cpp`
-    - Zbudować aplikacje [Budowanie aplikacji](#Budowanie-Aplikacji)
-    - Odpalić test
-
----
-
-## **Budowanie Aplikacji**
-Niestety w C/C++ aby program działał należy go najpierw skompilować. Robi się to całkiem skomplikowane kiedy mamy do czynienia z armią plików. Tutaj z pomoca przychodzi nam Cmake. Aby zbudować aplikację należy:
-- Wejść do folderu build:
-    ```bash
-    cd build
-    ```
-- Następnie zbudować aplikację:
-    ```bash
-    cmake ..
-    ```
-- Potem zbudować testy:
-    ```bash
-    cmake --build . --target nazwa_twojego_testu
-    ```
-- I na końcu przetestować moduł:
-    ```bash
-    ctest
-    ```
-
----
-
-## **Git oraz GitHub**
-Moi drodzy, kilka zasad odnośnie Githuba:
-- ⚠️ Pierwsza rzecz którą **obowiązkowo** każdy ma zrobić to sprawdzić czy jesteście na swoim `branchu`. Jesli nie:
-    ```bash
-    git checkout branch-name
-    ```
-- ⚠️ Następną **obowiązkową** rzeczą jest fetchowanie zmian z `maina`:
-    ```bash
-    git merge main
-    ```
-- ❌ **Pod żadnym pozorem** proszę nie robić commitów na `main`.
-- ❌ Proszę też nie robić merga na `maina` ze swojego brancha - tym zajmiemy się razem z Witkiem.
-
----
-
-## **Klasa Signal**
-Jak przyjrzycie się deklaracji/definicji klasy Signal to zobaczycie że posiada ona metodę `getTestVectors()` która zwraca sinusa. Jeśli do czegoś wam się to przyda to śmiało możecie ją wykorzystywać.
-Oczywiście zachęcam do tworzenia swoich własnych danych testowych - przydadzą Wam się.
-
----
-
-### **Dziękujemy za pracę nad ECG App! 🎉**
-
----
+```
+├── src/                  # Source files
+├── include/              # Header files
+├── tests/                # Test files
+├── Dockerfile           # Docker configuration
+├── docker-compose.yml   # Docker Compose configuration
+└── CMakeLists.txt      # CMake build configuration
+```
