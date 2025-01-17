@@ -1,0 +1,99 @@
+services:
+  ecg-dev:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./:/home/user/project:ro
+      - ./build:/home/user/project/build
+    environment:
+      - DISPLAY=host.docker.internal:0.0
+      - LIBGL_ALWAYS_INDIRECT=1
+      - QT_X11_NO_MITSHM=1
+      - QT_QPA_PLATFORM=xcb
+      - QT_DEBUG_PLUGINS=1
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    user: user
+    command: sh -c "mkdir -p ./build && qt-cmake . -G Ninja -B ./build && cmake --build ./build && ./build/ECGProcessing"
+
+  qt-creator:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./:/home/user/project:rw
+      - ./build:/home/user/project/build
+      - ./.qtcreator/config:/home/user/.config/QtProject:rw
+      - ./.qtcreator/cache:/home/user/.cache/QtProject:rw
+    environment:
+      - DISPLAY=host.docker.internal:0.0
+      - LIBGL_ALWAYS_INDIRECT=1
+      - QT_X11_NO_MITSHM=1
+      - QT_QPA_PLATFORM=xcb
+      - QT_DEBUG_PLUGINS=1
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    user: "1000:1000"  # Explicit UID:GID
+    command: qtcreator
+
+  qt-creator-init:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./.qtcreator/config:/home/user/.config/QtProject
+      - ./.qtcreator/cache:/home/user/.cache/QtProject
+    user: root
+    command: sh -c "mkdir -p /home/user/.config/QtProject/qtcreator && mkdir -p /home/user/.cache/QtProject && chown -R 1000:1000 /home/user/.config/QtProject && chown -R 1000:1000 /home/user/.cache/QtProject && chmod -R 755 /home/user/.config/QtProject && chmod -R 755 /home/user/.cache/QtProject"
+
+  qt-designer:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./:/home/user/project:rw
+      - ./build:/home/user/project/build
+    environment:
+      - DISPLAY=host.docker.internal:0.0
+      - LIBGL_ALWAYS_INDIRECT=1
+      - QT_X11_NO_MITSHM=1
+      - QT_QPA_PLATFORM=xcb
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    user: user
+    command: designer
+
+  ecg-prod:
+    build:
+      context: .
+      target: runtime
+    environment:
+      - DISPLAY=host.docker.internal:0.0
+      - LIBGL_ALWAYS_INDIRECT=1
+      - QT_X11_NO_MITSHM=1
+      - QT_QPA_PLATFORM=xcb
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ecg-test:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./:/home/user/project:ro
+      - ./build:/home/user/project/build
+    user: user
+    command: sh -c "cd build && ctest --output-on-failure"
