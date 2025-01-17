@@ -29,4 +29,5 @@
 8. Pamiętaj, że po każdym git pull musisz zbudować kontener od nowa!:
    - docker compose build --no-cache
    - docker compose up ecg-dev
-9. Jeśli cokolwiek nie działa, pisz do Mikołaja albo na grupce
+9. Wszystkie rzeczy odnośnie budowania i uruchamiania kontenera da się też zrobić z poziomu Docker Desktop w wygodny sposób, klikając rzeczy w UI.
+10. Jeśli cokolwiek nie działa, pisz do Mikołaja albo na grupce
