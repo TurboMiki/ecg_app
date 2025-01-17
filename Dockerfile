@@ -1,7 +1,7 @@
 # Build stage
 FROM stateoftheartio/qt6:6.8-gcc-aqt AS builder
 
-# Install additional dependencies
+# Install additional dependencies including Qt Creator
 RUN sudo apt-get update && sudo apt-get install -y \
     build-essential \
     cmake \
@@ -16,6 +16,7 @@ RUN sudo apt-get update && sudo apt-get install -y \
     libx11-xcb-dev \
     libxcb-*-dev \
     libcups2-dev \
+    qtcreator \
     && sudo rm -rf /var/lib/apt/lists/*
 
 # Create and set proper permissions for project directory
