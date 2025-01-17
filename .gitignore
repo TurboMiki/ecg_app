@@ -3,3 +3,5 @@ build/*
 CMakeLists.txt.user
 100.dat
 .qtcreator/config/*
+.qtcreator\config\QtCreator.db
+.qtcreator\config\QtCreator.ini
