@@ -10,10 +10,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Set Qt path
-set(Qt6_DIR "/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6")
-set(CMAKE_PREFIX_PATH "/opt/Qt/6.8.0/gcc_64")
-
 # Qt settings
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -29,8 +25,11 @@ find_package(Qt6 REQUIRED COMPONENTS
 
 add_subdirectory(src/Model/Baseline)
 
-# Define sources
-file(GLOB_RECURSE SOURCES src/**/*.cpp)
+# Define sources - exclude test files
+file(GLOB_RECURSE SOURCES 
+    "src/**/*.cpp"
+)
+list(FILTER SOURCES EXCLUDE REGEX ".*_tests?\\.cpp$")
 message(STATUS "Source files found: ${SOURCES}")
 
 # First add the Wykresy subdirectory
@@ -43,7 +42,7 @@ set(RESOURCE_FILES src/View/MainWindow/resources.qrc)
 qt6_add_resources(RESOURCES ${RESOURCE_FILES})
 target_sources(ecg_app PRIVATE ${RESOURCES})
 
-# Include directories										
+# Include directories                                 
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model
@@ -95,7 +94,7 @@ target_include_directories(test_signal PRIVATE
     include/View
     include/ViewModel
     "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"
-)											   
+)                                            
 target_link_libraries(test_signal PRIVATE 
     gtest 
     gtest_main 
