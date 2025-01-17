@@ -1,4 +1,5 @@
-build/
+build/*
 .vscode
 CMakeLists.txt.user
 100.dat
+.qtcreator/config/*
