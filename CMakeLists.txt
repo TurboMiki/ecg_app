@@ -10,21 +10,40 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Ustawienie ścieżki do Qt
-set(Qt6_DIR $ENV{QT_PATH})
-find_package(Qt6 COMPONENTS Widgets REQUIRED HINTS $ENV{QT_PATH})
+# Set Qt path
+set(Qt6_DIR "/opt/Qt/6.8.0/gcc_64/lib/cmake/Qt6")
+set(CMAKE_PREFIX_PATH "/opt/Qt/6.8.0/gcc_64")
 
+# Qt settings
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
-# Zdefiniowanie źródeł
+# Find Qt packages
+find_package(Qt6 REQUIRED COMPONENTS 
+    Core
+    Gui
+    Widgets 
+    PrintSupport
+)
+
+add_subdirectory(src/Model/Baseline)
+
+# Define sources
 file(GLOB_RECURSE SOURCES src/**/*.cpp)
 message(STATUS "Source files found: ${SOURCES}")
 
-# Biblioteka statyczna
-add_library(ecg_app STATIC ${SOURCES})
+# First add the Wykresy subdirectory
+add_subdirectory(Wykresy)
 
-# Explicitly include necessary directories
+# Static library
+add_library(ecg_app STATIC ${SOURCES})
+# Add resource files to library
+set(RESOURCE_FILES src/View/MainWindow/resources.qrc)
+qt6_add_resources(RESOURCES ${RESOURCE_FILES})
+target_sources(ecg_app PRIVATE ${RESOURCES})
+
+# Include directories										
 target_include_directories(ecg_app PUBLIC 
     include
     include/Model
@@ -37,23 +56,27 @@ target_include_directories(ecg_app PUBLIC
     include/Model/Signal
     include/Model/Waves
     include/Model/HeartClass
-
     include/View
     include/View/MainWindow
-
     include/ViewModel
-    
+    "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"
 )
 
-# Znalezienie Qt
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
-target_link_libraries(ecg_app Qt6::Widgets)
+# Link Qt libraries and visualization
+target_link_libraries(ecg_app PUBLIC 
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::PrintSupport
+    visualization
+    baseline
+)
 
-# Plik wykonywalny
+# Executable
 add_executable(ECGProcessing main.cpp)
 target_link_libraries(ECGProcessing ecg_app)
 
-# Pobranie GoogleTest
+# GoogleTest
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -61,12 +84,24 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-# Włączenie testów
+# Enable testing
 enable_testing()
 
-# Testy
+# Tests
 add_executable(test_signal tests/test_signal.cpp)
-target_link_libraries(test_signal PRIVATE gtest gtest_main ecg_app Qt6::Widgets)
-
-include(GoogleTest)
-gtest_discover_tests(test_signal)
+target_include_directories(test_signal PRIVATE 
+    include
+    include/Model
+    include/View
+    include/ViewModel
+    "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"
+)											   
+target_link_libraries(test_signal PRIVATE 
+    gtest 
+    gtest_main 
+    ecg_app 
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::PrintSupport
+)
