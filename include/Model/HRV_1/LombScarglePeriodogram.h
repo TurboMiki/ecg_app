@@ -1,5 +1,5 @@
 #include <vector>
-#include "Signal.h"
+#include <Signal.h>
 
 class LombScarglePeriodogram{
     public:

@@ -1,5 +1,5 @@
 #pragma once
-#include "Signal.h"
+#include <Signal.h>
 #include "RRIntervals.h"
 #include <array>
 #include <vector>

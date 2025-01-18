@@ -1,5 +1,5 @@
 #pragma once
-#include "Signal.h"
+#include <Signal.h>
 #include "TimeDomainHRV.h"
 #include "FrequencyDomainHRV.h"
 #include <array>

@@ -1,6 +1,7 @@
 #pragma once
 #include "LombScarglePeriodogram.h"
 #include <vector>
+#include <Signal.h>
 
 class FrequencyDomainHRV : public LombScarglePeriodogram{
     public:
