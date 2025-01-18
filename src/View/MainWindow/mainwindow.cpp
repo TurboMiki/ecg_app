@@ -2,10 +2,6 @@
 #include "ui_mainwindow.h"
 #include "settingsform.h"
 
-/////////////////////////////////
-#include "waves.cpp"
-////////////////////////////////
-
 #include "basic_plot.h"
 
 #include "MovingMeanFilter.h"
@@ -273,7 +269,7 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
             // First detect R-peaks if not already detected
             if (r_peak_positions.isEmpty()) {
                 std::vector<int> peaks;
-                rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+                rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
                 if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                     throw std::runtime_error("R-peaks detection failed");
                 }
@@ -283,33 +279,11 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
                 }
             }
 
-            // Convert QList to std::vector for R-peaks
-            std::vector<int> r_peaks;
-            r_peaks.reserve(r_peak_positions.size());
-            for (int peak : r_peak_positions) {
-                r_peaks.push_back(peak);
+            // Create Waves detector and process
+            Waves waveDetector(filteredSignal, r_peak_positions);
+            if (!waveDetector.detectWaves()) {
+                throw std::runtime_error("Wave detection failed");
             }
-
-            // Detect QRS complexes
-            auto [qrsOnsets, qrsEnds] = detectQRSOnsetEnd(filteredSignal, r_peaks);
-            
-            // Detect P waves
-            auto [pOnsets, pPeaks, pEnds] = detectPWave(filteredSignal, qrsOnsets);
-            
-            // Detect T wave ends
-            auto tEnds = detectTEnds(filteredSignal, pOnsets);
-
-            qDebug() << "Wave detection successful:";
-            qDebug() << "QRS complexes:" << qrsOnsets.size();
-            qDebug() << "P waves:" << pOnsets.size();
-            qDebug() << "T wave ends:" << tEnds.size();
-            
-            // Convert all detected points to QVectors for plotting
-            QVector<int> qrsOnsetsQV = QVector<int>(qrsOnsets.begin(), qrsOnsets.end());
-            QVector<int> qrsEndsQV = QVector<int>(qrsEnds.begin(), qrsEnds.end());
-            QVector<int> pOnsetsQV = QVector<int>(pOnsets.begin(), pOnsets.end());
-            QVector<int> pEndsQV = QVector<int>(pEnds.begin(), pEnds.end());
-            QVector<int> tEndsQV = QVector<int>(tEnds.begin(), tEnds.end());
 
             // Update the plot
             QLayout* layout = ui->frame_2->layout();
@@ -332,15 +306,15 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
             // Update plot with all wave components
             plotWidget->updateWavesPlot(
                 filteredSignal,
-                "ECG Signal",                  // Main signal legend
-                qrsOnsetsQV, "QRS Onset",      // First highlight set
-                qrsEndsQV, "QRS End",          // Second highlight set
-                pOnsetsQV, "P Onset",          // Third highlight set
-                pEndsQV, "P End",              // Fourth highlight set
-                tEndsQV, "T End",              // Fifth highlight set
-                "ECG Signal with Wave Components",  // Title
-                "Time [s]",                        // X-axis label
-                "Voltage [mV]"                     // Y-axis label
+                "ECG Signal",                               // Main signal legend
+                waveDetector.getQRSOnsets(), "QRS Onset",   // First highlight set
+                waveDetector.getQRSEnds(), "QRS End",       // Second highlight set
+                waveDetector.getPOnsets(), "P Onset",       // Third highlight set
+                waveDetector.getPEnds(), "P End",           // Fourth highlight set
+                waveDetector.getTEnds(), "T End",           // Fifth highlight set
+                "ECG Signal with Wave Components",          // Title
+                "Time [s]",                                 // X-axis label
+                "Voltage [mV]"                              // Y-axis label
             );
             
         } catch (const std::exception& e) {
