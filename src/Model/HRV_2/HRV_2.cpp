@@ -6,6 +6,10 @@
 #include <cmath>
 #include <numeric>
 
+#include <QDebug>
+#include <QFileDialog>
+#include <QMessageBox>
+
 // Konstruktor
 HRV_2::HRV_2() {
     params_.fill(0.0);
@@ -13,74 +17,147 @@ HRV_2::HRV_2() {
 
 // Funkcja przetwarzaj�ca sygna� R-peaks
 void HRV_2::process(const Signal& rIds) {
+    qDebug() << "HRV_2::process - Starting processing";
     auto rPeaks = rIds.getX();
     int fs = rIds.getSamplingRate();
-    if (rPeaks.size() < 2) return;
+    
+    qDebug() << "HRV_2::process - Number of peaks:" << rPeaks.size() 
+             << "Sampling rate:" << fs;
 
-    // Obliczanie interwa��w RR
-    std::vector<double> intervals;
-    for (size_t i = 1; i < rPeaks.size(); ++i) {
-        intervals.push_back((rPeaks[i] - rPeaks[i - 1]) / static_cast<double>(fs));
+    if (rPeaks.size() < 2) {
+        qDebug() << "HRV_2::process - Not enough peaks for analysis";
+        return;
     }
 
-    // Generowanie histogramu
-    generateHistogram(intervals);
+    // Calculate RR intervals in seconds
+    qDebug() << "HRV_2::process - Calculating intervals";
+    std::vector<double> intervals;
+    for (size_t i = 1; i < rPeaks.size(); ++i) {
+        // RR intervals should be in seconds
+        double interval = rPeaks[i] - rPeaks[i - 1];
+        intervals.push_back(interval);
+    }
+    
+    qDebug() << "HRV_2::process - Calculated" << intervals.size() << "intervals";
+    qDebug() << "First few intervals:";
+    for (size_t i = 0; i < std::min(size_t(5), intervals.size()); ++i) {
+        qDebug() << "  Interval" << i << ":" << intervals[i] << "seconds";
+    }
 
-    // Obliczanie TiNN
-    calculateTiNN();
+    // Validate intervals
+    double meanInterval = 0.0;
+    for (double interval : intervals) {
+        meanInterval += interval;
+    }
+    meanInterval /= intervals.size();
+    
+    qDebug() << "Mean RR interval:" << meanInterval << "seconds";
+    
+    if (meanInterval < 0.4 || meanInterval > 1.5) {
+        qDebug() << "Warning: Mean RR interval outside normal range (0.4-1.5s)";
+    }
 
-    // Obliczanie indeksu tr�jk�tnego
-    calculateTriangularIndex(intervals);
-
-    // Tworzenie wykresu Poincare
-    generatePoincarePlot(intervals);
-
-    // Dopasowanie elipsy do wykresu Poincare i obliczenie SD1, SD2
-    fitPoincareEllipse(intervals);
+    try {
+        generateHistogram(intervals);
+        calculateTiNN();
+        calculateTriangularIndex(intervals);
+        generatePoincarePlot(intervals);
+        fitPoincareEllipse(intervals);
+    } catch (const std::exception& e) {
+        qDebug() << "HRV_2::process - Exception caught:" << e.what();
+        throw;
+    }
+    
+    qDebug() << "HRV_2::process - Processing completed successfully";
 }
 
 // Generowanie histogramu interwa��w RR
 void HRV_2::generateHistogram(const std::vector<double>& intervals) {
-    if (intervals.empty()) return;
+    qDebug() << "generateHistogram - Starting";
+    
+    if (intervals.empty()) {
+        qDebug() << "generateHistogram - Empty intervals vector";
+        throw std::runtime_error("No RR intervals available for histogram");
+    }
 
-    // Obliczanie minimalnej i maksymalnej d�ugo�ci interwa�u
-    double RRmax = *std::max_element(intervals.begin(), intervals.end());
-    double RRmin = *std::min_element(intervals.begin(), intervals.end());
+    // Calculate min and max with validation
+    auto [minIt, maxIt] = std::minmax_element(intervals.begin(), intervals.end());
+    double RRmin = *minIt;
+    double RRmax = *maxIt;
+    
+    qDebug() << "generateHistogram - RR range:" << RRmin << "to" << RRmax 
+             << "Number of intervals:" << intervals.size();
 
-    // Obliczanie d�ugo�ci (rozpi�to��) przedzia�u
+    // Validate RR interval values
+    if (RRmin < 0 || RRmax <= RRmin) {
+        qDebug() << "generateHistogram - Invalid RR interval range";
+        throw std::runtime_error("Invalid RR interval range");
+    }
+
+    // Calculate histogram parameters
     double length = RRmax - RRmin;
+    double binWidth = 0.01; // 10ms bins
+    
+    // Ensure we have at least 10 bins but not more than 1000
+    int numBins = std::max(10, std::min(1000, static_cast<int>(length / binWidth)));
+    binWidth = length / numBins; // Recalculate bin width for even distribution
+    
+    qDebug() << "generateHistogram - Using" << numBins << "bins with width" << binWidth;
 
-    // Obliczanie liczby bin�w (index_hist)
-    double HistogramBinLength = 0.01; // D�ugo�� pojedynczego binu (w sekundach), mo�na dostosowa�
-    int index_hist = static_cast<int>(length / HistogramBinLength);
+    // Create and fill histogram
+    std::vector<double> histX(numBins);
+    std::vector<double> histY(numBins, 0.0);
+    
+    // Initialize bin edges
+    for (int i = 0; i < numBins; ++i) {
+        histX[i] = RRmin + i * binWidth;
+    }
 
-    // Obliczanie histogramu
-    std::vector<int> histogram(index_hist, 0);
+    // Fill histogram
+    int maxCount = 0;
+    int maxBin = 0;
+    
     for (double interval : intervals) {
-        int bin = std::min(static_cast<int>((interval - RRmin) / HistogramBinLength), index_hist - 1);
-        if (bin >= 0 && bin < index_hist) {
-            histogram[bin]++;
+        if (interval >= RRmin && interval <= RRmax) {
+            int bin = std::min(numBins - 1, 
+                             static_cast<int>((interval - RRmin) / binWidth));
+            histY[bin]++;
+            
+            if (histY[bin] > maxCount) {
+                maxCount = histY[bin];
+                maxBin = bin;
+            }
         }
     }
 
-    // Przechowanie wynik�w histogramu w odpowiednim formacie
-    std::vector<double> histX, histY;
-    for (int i = 0; i < histogram.size(); ++i) {
-        double binMaxInterval = RRmin + (i + 1) * HistogramBinLength; // Reprezentacja binu jako koniec przedzia�u
-        histX.push_back(binMaxInterval);
-        histY.push_back(histogram[i]);
+    qDebug() << "generateHistogram - Histogram filled. Max count:" << maxCount 
+             << "at bin:" << maxBin;
+
+    // Store parameters
+    params_[0] = maxBin;
+    params_[1] = maxCount;
+
+    // Validate histogram data
+    if (std::all_of(histY.begin(), histY.end(), [](double v) { return v == 0; })) {
+        qDebug() << "generateHistogram - Empty histogram generated";
+        throw std::runtime_error("Empty histogram generated");
     }
 
-    // Znalezienie najliczniejszego binu
-    auto maxIt = std::max_element(histogram.begin(), histogram.end());
-    int maxBinIndex = std::distance(histogram.begin(), maxIt);
+    // Create Signal object
+    try {
+        rHist_ = Signal(histX, histY, 1);
+        qDebug() << "generateHistogram - Created Signal object with size:" << rHist_.getSize();
+        
+        if (rHist_.getSize() == 0) {
+            throw std::runtime_error("Failed to create histogram Signal object");
+        }
+    } catch (const std::exception& e) {
+        qDebug() << "generateHistogram - Error creating Signal:" << e.what();
+        throw;
+    }
 
-    params_[0] = static_cast<double>(maxBinIndex); // Numer najliczniejszego binu (indeks)
-    params_[1] = *maxIt; // maxBinY (liczba wyst�pie� w najliczniejszym binie)
-
-    rHist_ = Signal(histX, histY, 1);
+    qDebug() << "generateHistogram - Successfully completed";
 }
-
 // Obliczanie TiNN � znalezienie optymalnego N i M
 void HRV_2::calculateTiNN() {
     // Sprawd�, czy histogram interwa��w istnieje
