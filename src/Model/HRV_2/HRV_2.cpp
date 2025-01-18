@@ -1,4 +1,4 @@
-#include "../include/HRV_2.h"
+#include "HRV_2.h"
 #define M_PI 3.14159265358979323846
 #include <array>
 #include <vector>
@@ -11,13 +11,13 @@ HRV_2::HRV_2() {
     params_.fill(0.0);
 }
 
-// Funkcja przetwarzaj¹ca sygna³ R-peaks
+// Funkcja przetwarzajï¿½ca sygnaï¿½ R-peaks
 void HRV_2::process(const Signal& rIds) {
     auto rPeaks = rIds.getX();
     int fs = rIds.getSamplingRate();
     if (rPeaks.size() < 2) return;
 
-    // Obliczanie interwa³ów RR
+    // Obliczanie interwaï¿½ï¿½w RR
     std::vector<double> intervals;
     for (size_t i = 1; i < rPeaks.size(); ++i) {
         intervals.push_back((rPeaks[i] - rPeaks[i - 1]) / static_cast<double>(fs));
@@ -29,7 +29,7 @@ void HRV_2::process(const Signal& rIds) {
     // Obliczanie TiNN
     calculateTiNN();
 
-    // Obliczanie indeksu trójk¹tnego
+    // Obliczanie indeksu trï¿½jkï¿½tnego
     calculateTriangularIndex(intervals);
 
     // Tworzenie wykresu Poincare
@@ -39,19 +39,19 @@ void HRV_2::process(const Signal& rIds) {
     fitPoincareEllipse(intervals);
 }
 
-// Generowanie histogramu interwa³ów RR
+// Generowanie histogramu interwaï¿½ï¿½w RR
 void HRV_2::generateHistogram(const std::vector<double>& intervals) {
     if (intervals.empty()) return;
 
-    // Obliczanie minimalnej i maksymalnej d³ugoœci interwa³u
+    // Obliczanie minimalnej i maksymalnej dï¿½ugoï¿½ci interwaï¿½u
     double RRmax = *std::max_element(intervals.begin(), intervals.end());
     double RRmin = *std::min_element(intervals.begin(), intervals.end());
 
-    // Obliczanie d³ugoœci (rozpiêtoœæ) przedzia³u
+    // Obliczanie dï¿½ugoï¿½ci (rozpiï¿½toï¿½ï¿½) przedziaï¿½u
     double length = RRmax - RRmin;
 
-    // Obliczanie liczby binów (index_hist)
-    double HistogramBinLength = 0.01; // D³ugoœæ pojedynczego binu (w sekundach), mo¿na dostosowaæ
+    // Obliczanie liczby binï¿½w (index_hist)
+    double HistogramBinLength = 0.01; // Dï¿½ugoï¿½ï¿½ pojedynczego binu (w sekundach), moï¿½na dostosowaï¿½
     int index_hist = static_cast<int>(length / HistogramBinLength);
 
     // Obliczanie histogramu
@@ -63,10 +63,10 @@ void HRV_2::generateHistogram(const std::vector<double>& intervals) {
         }
     }
 
-    // Przechowanie wyników histogramu w odpowiednim formacie
+    // Przechowanie wynikï¿½w histogramu w odpowiednim formacie
     std::vector<double> histX, histY;
     for (int i = 0; i < histogram.size(); ++i) {
-        double binMaxInterval = RRmin + (i + 1) * HistogramBinLength; // Reprezentacja binu jako koniec przedzia³u
+        double binMaxInterval = RRmin + (i + 1) * HistogramBinLength; // Reprezentacja binu jako koniec przedziaï¿½u
         histX.push_back(binMaxInterval);
         histY.push_back(histogram[i]);
     }
@@ -76,14 +76,14 @@ void HRV_2::generateHistogram(const std::vector<double>& intervals) {
     int maxBinIndex = std::distance(histogram.begin(), maxIt);
 
     params_[0] = static_cast<double>(maxBinIndex); // Numer najliczniejszego binu (indeks)
-    params_[1] = *maxIt; // maxBinY (liczba wyst¹pieñ w najliczniejszym binie)
+    params_[1] = *maxIt; // maxBinY (liczba wystï¿½pieï¿½ w najliczniejszym binie)
 
     rHist_ = Signal(histX, histY, 1);
 }
 
-// Obliczanie TiNN – znalezienie optymalnego N i M
+// Obliczanie TiNN ï¿½ znalezienie optymalnego N i M
 void HRV_2::calculateTiNN() {
-    // SprawdŸ, czy histogram interwa³ów istnieje
+    // Sprawdï¿½, czy histogram interwaï¿½ï¿½w istnieje
     if (rHist_.getX().empty()) {
         return;
     }
@@ -91,13 +91,13 @@ void HRV_2::calculateTiNN() {
     double accelerator = 0;
     size_t Histogram_size = rHist_.getX().size();
     double globalminimum = std::numeric_limits<double>::infinity();
-    bool setglobalminimum = false; // Flaga, która œledzi, czy globalne minimum zosta³o ustawione
+    bool setglobalminimum = false; // Flaga, ktï¿½ra ï¿½ledzi, czy globalne minimum zostaï¿½o ustawione
     double optimalN = 0;
     double optimalM = 0;
 
-    // Pêtla przez mo¿liwe wartoœci index_N i index_M
+    // Pï¿½tla przez moï¿½liwe wartoï¿½ci index_N i index_M
     for (double index_N = 0; index_N < Histogram_size - 1; ++index_N) {
-        for (double index_M = index_N + 1; index_M < Histogram_size; ++index_M) { // Utwórz wektor indeksów
+        for (double index_M = index_N + 1; index_M < Histogram_size; ++index_M) { // Utwï¿½rz wektor indeksï¿½w
             std::vector<double> x = { rHist_.getX()[static_cast<int>(index_N)], rHist_.getX()[static_cast<int>(index_M)] };
 
             // Zresetuj akcelerator dla nowych danych
@@ -114,7 +114,7 @@ void HRV_2::calculateTiNN() {
 
             double minimum = 0;
 
-            // Oblicz minimum dla pierwszej czêœci histogramu
+            // Oblicz minimum dla pierwszej czï¿½ci histogramu
             for (double i = 0; i <= index_N; ++i) {
                 double HistogramValue = rHist_.getY()[static_cast<int>(i)];
                 minimum += std::pow(HistogramValue, 2);
@@ -127,19 +127,19 @@ void HRV_2::calculateTiNN() {
                 minimum += std::pow((LinearValue - HistogramValue), 2);
             }
 
-            // Oblicz minimum dla drugiej czêœci histogramu
+            // Oblicz minimum dla drugiej czï¿½ci histogramu
             for (double i = index_M; i < Histogram_size; ++i) {
                 double HistogramValue = rHist_.getY()[static_cast<int>(i)];
                 minimum += std::pow(HistogramValue, 2);
             }
 
-            // Ustaw globalne minimum, jeœli nie zosta³o jeszcze ustawione
+            // Ustaw globalne minimum, jeï¿½li nie zostaï¿½o jeszcze ustawione
             if (!setglobalminimum) {
                 globalminimum = minimum;
                 setglobalminimum = true;
             }
 
-            // Zaktualizuj optymalne wartoœci, jeœli bie¿¹ce minimum jest mniejsze lub równe globalnemu minimum
+            // Zaktualizuj optymalne wartoï¿½ci, jeï¿½li bieï¿½ï¿½ce minimum jest mniejsze lub rï¿½wne globalnemu minimum
             if (minimum <= globalminimum) {
                 globalminimum = minimum;
                 optimalN = index_N;
@@ -159,7 +159,7 @@ void HRV_2::calculateTiNN() {
     params_[4] = (time_M - time_N) * 1000.0;
 }
 
-// Obliczanie indeksu trójk¹tnego
+// Obliczanie indeksu trï¿½jkï¿½tnego
 void HRV_2::calculateTriangularIndex(const std::vector<double>& intervals) {
     if (intervals.empty()) {
         return;
@@ -168,7 +168,7 @@ void HRV_2::calculateTriangularIndex(const std::vector<double>& intervals) {
     // Oblicz totalRRIntervals
     size_t totalRRIntervals = intervals.size();
 
-    // Zmienna Y powinna byæ równa maxBinY (najliczniejszy bin w histogramie)
+    // Zmienna Y powinna byï¿½ rï¿½wna maxBinY (najliczniejszy bin w histogramie)
     double Y = params_[1]; // Pobierz maxBinY z params_[1]
 
     if (Y != 0) {
@@ -183,17 +183,17 @@ void HRV_2::generatePoincarePlot(const std::vector<double>& intervals) {
         return;
     }
 
-    // Tworzenie wykresu Poincaré
+    // Tworzenie wykresu Poincarï¿½
     std::vector<double> x, y;
     for (size_t i = 0; i < intervals.size() - 1; ++i) {
-        x.push_back(intervals[i]);      // Dodaj interwa³ RR do osi X
-        y.push_back(intervals[i + 1]);  // Dodaj s¹siedni interwa³ RR do osi Y
+        x.push_back(intervals[i]);      // Dodaj interwaï¿½ RR do osi X
+        y.push_back(intervals[i + 1]);  // Dodaj sï¿½siedni interwaï¿½ RR do osi Y
     }
 
     poincarePlot_ = Signal(x, y, 1);
 }
 
-// Funkcja dopasowuj¹ca elipsê do wykresu Poincaré - obliczenie SD1 i SD2
+// Funkcja dopasowujï¿½ca elipsï¿½ do wykresu Poincarï¿½ - obliczenie SD1 i SD2
 void HRV_2::fitPoincareEllipse(const std::vector<double>& intervals) {
     if (intervals.size() < 2) {
         return;
@@ -209,7 +209,7 @@ void HRV_2::fitPoincareEllipse(const std::vector<double>& intervals) {
     sdsd = std::sqrt(sdsd / (N - 1));
 
     // Obliczanie SDNN (standard deviation of all RR intervals)
-    double meanRR = std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();  // Œrednia RR
+    double meanRR = std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();  // ï¿½rednia RR
     double sdnn = 0.0;
     for (size_t i = 0; i < N; ++i) {
         double diff = intervals[i] - meanRR;
@@ -223,7 +223,7 @@ void HRV_2::fitPoincareEllipse(const std::vector<double>& intervals) {
     params_[6] = SD_1;
     params_[7] = SD_2;
 
-    // Tworzenie punktów elipsy
+    // Tworzenie punktï¿½w elipsy
     std::vector<double> ellipseX, ellipseY;
     std::vector<double> poincareX(intervals.size() - 1), poincareY(intervals.size() - 1);
     for (size_t i = 0; i < intervals.size() - 1; ++i) {
@@ -234,11 +234,11 @@ void HRV_2::fitPoincareEllipse(const std::vector<double>& intervals) {
     double meanX = std::accumulate(poincareX.begin(), poincareX.end(), 0.0) / poincareX.size();
     double meanY = std::accumulate(poincareY.begin(), poincareY.end(), 0.0) / poincareY.size();
 
-    params_[8] = meanX; // Œrodek elipsy - X
-    params_[9] = meanY; // Œrodek elipsy - Y
+    params_[8] = meanX; // ï¿½rodek elipsy - X
+    params_[9] = meanY; // ï¿½rodek elipsy - Y
 
     for (double theta = 0; theta < 2 * M_PI; theta += 0.1) {
-        // Równanie elipsy
+        // Rï¿½wnanie elipsy
         double xEllipse = meanX + SD_2 * std::cos(theta) * std::cos(M_PI / 4) - SD_1 * std::sin(theta) * std::sin(M_PI / 4);
         double yEllipse = meanY + SD_2 * std::cos(theta) * std::sin(M_PI / 4) + SD_1 * std::sin(theta) * std::cos(M_PI / 4);
 
@@ -250,12 +250,12 @@ void HRV_2::fitPoincareEllipse(const std::vector<double>& intervals) {
     poincareEllipse_ = Signal(ellipseX, ellipseY, 1);
 }
 
-// Pobieranie parametrów analizy HRV
+// Pobieranie parametrï¿½w analizy HRV
 std::array<double, 10> HRV_2::getParams() const {
     return params_;
 }
 
-// Pobieranie histogramu interwa³ów RR
+// Pobieranie histogramu interwaï¿½ï¿½w RR
 Signal HRV_2::getRHist() const {
     return rHist_;
 }

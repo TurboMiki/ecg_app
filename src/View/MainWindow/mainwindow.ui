@@ -107,20 +107,6 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="btnHRV_DFA">
-             <property name="text">
-              <string>log-log (HRV_DFA)</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnHRV2">
-             <property name="text">
-              <string>Poincaré (HRV_2)</string>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QPushButton" name="btnFECG">
              <property name="text">
               <string>Filtered ECG Signal</string>
@@ -131,6 +117,34 @@
             <widget class="QPushButton" name="btnHRV_1">
              <property name="text">
               <string>HRV_1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnHRV2_PC">
+             <property name="text">
+              <string>Poincaré (HRV_2)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnHRV2_hist">
+             <property name="text">
+              <string>Histogram (HRV_2)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnHRV_DFA">
+             <property name="text">
+              <string>log-log (HRV_DFA)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnHeartClass">
+             <property name="text">
+              <string>HeartClass</string>
              </property>
             </widget>
            </item>
