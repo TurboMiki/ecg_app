@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QCustomPlot.h>
 #include <QString>
+#include "Signal.h"
 
 class Scatter_Plot : public QWidget
 {

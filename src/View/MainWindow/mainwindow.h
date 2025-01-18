@@ -11,6 +11,8 @@
 #include "settingsform.h"
 #include "basic_plot.h"
 #include "waves_plot.h"
+#include "scatter_plot.h"
+
 
 enum class PLOT_TYPE{
     RAW_PLOT

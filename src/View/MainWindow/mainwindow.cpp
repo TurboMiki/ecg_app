@@ -3,6 +3,8 @@
 #include "settingsform.h"
 
 #include "basic_plot.h"
+#include "waves_plot.h"
+#include "scatter_plot.h"
 
 #include "MovingMeanFilter.h"
 #include "ButterworthFilter.h"
@@ -126,7 +128,7 @@ void MainWindow::on_btnRaw_clicked()
         layout->addWidget(plotWidget);
         QVector<int> highlights;
         plotWidget->updateBasicPlot(inputSignal, highlights, 
-            "Raw ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+            "Raw ECG Signal", "Hajlajts","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
@@ -163,7 +165,7 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
             return;
         }
         //
-        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal","Indeksy","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
         break;
     }
     default:
@@ -215,7 +217,7 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
                 Basic_Plot* plotWidget = new Basic_Plot();
                 layout->addWidget(plotWidget);
                 plotWidget->updateBasicPlot(filteredSignal, r_peak_positions,
-                    "Moving Mean Filtered ECG Signal with R-peaks", "ECG Signal (MLII)", 
+                    "Moving Mean Filtered ECG Signal", "RPeaks", "ECG Signal (MLII)", 
                     "Time [s]", "Voltage [mV]");
             }
         } catch (const std::exception& e) {
@@ -248,7 +250,7 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             layout->addWidget(plotWidget);
             QList<int> empty_highlights;
             plotWidget->updateBasicPlot(filteredSignal, empty_highlights,
-                "Moving Mean Filtered ECG Signal", "ECG Signal (MLII)", 
+                "Moving Mean Filtered ECG Signal", "Indeksy","ECG Signal (MLII)", 
                 "Time [s]", "Voltage [mV]");
         } catch (const std::exception& e) {
             qDebug() << "Error updating plot:" << e.what();
@@ -427,7 +429,7 @@ void MainWindow::on_btnFECG_clicked()
             Basic_Plot* filteredPlotWidget = new Basic_Plot();
             layout->addWidget(filteredPlotWidget);
             filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
-                "Moving Mean Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+                "Moving Mean Filtered ECG Signal", "QRS","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
             progress.setValue(100);
 
         } catch (const std::exception& e) {
