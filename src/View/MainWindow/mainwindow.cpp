@@ -183,8 +183,8 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             
             // Detect R-peaks using Pan-Tompkins
             std::vector<int> peaks;
-            // rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
-            rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+            rPeaks.setParams("PAN_TOMPKINS", 3, 0.018);
+            // rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
             
             if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                 qDebug() << "R-peaks detection successful";
@@ -252,6 +252,117 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
                 "Time [s]", "Voltage [mV]");
         } catch (const std::exception& e) {
             qDebug() << "Error updating plot:" << e.what();
+        }
+    }
+}
+
+void MainWindow::on_checkBoxQRS_stateChanged(int state)
+{
+    if (state == Qt::Checked) {
+        try {
+            qDebug() << "Starting wave detection...";
+            
+            // Get and filter the signal
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            // First detect R-peaks if not already detected
+            if (r_peak_positions.isEmpty()) {
+                std::vector<int> peaks;
+                rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+                if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                    throw std::runtime_error("R-peaks detection failed");
+                }
+                r_peak_positions.reserve(peaks.size());
+                for (const auto& peak : peaks) {
+                    r_peak_positions.append(peak);
+                }
+            }
+
+            // Create Waves detector and process
+            Waves waveDetector(filteredSignal, r_peak_positions);
+            if (!waveDetector.detectWaves()) {
+                throw std::runtime_error("Wave detection failed");
+            }
+
+            // Update the plot
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new waves plot
+            Waves_Plot* plotWidget = new Waves_Plot();
+            layout->addWidget(plotWidget);
+            
+            // Update plot with all wave components
+            plotWidget->updateWavesPlot(
+                filteredSignal,
+                "ECG Signal",                               // Main signal legend
+                waveDetector.getQRSOnsets(), "QRS Onset",   // First highlight set
+                waveDetector.getQRSEnds(), "QRS End",       // Second highlight set
+                waveDetector.getPOnsets(), "P Onset",       // Third highlight set
+                waveDetector.getPEnds(), "P End",           // Fourth highlight set
+                waveDetector.getTEnds(), "T End",           // Fifth highlight set
+                "ECG Signal with Wave Components",          // Title
+                "Time [s]",                                 // X-axis label
+                "Voltage [mV]"                              // Y-axis label
+            );
+            
+        } catch (const std::exception& e) {
+            qDebug() << "Error during wave detection:" << e.what();
+            ui->checkBoxQRS->setChecked(false);
+            QMessageBox::warning(this, "Error", 
+                QString("Failed to detect waves: %1").arg(e.what()));
+        }
+    } else {
+        // When unchecked, clear highlights and redraw
+        try {
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new waves plot without highlights
+            Waves_Plot* plotWidget = new Waves_Plot();
+            layout->addWidget(plotWidget);
+            
+            // Update plot with no highlights
+            plotWidget->updateWavesPlot(
+                filteredSignal,
+                "ECG Signal",              // Main signal legend
+                QVector<int>(), "",        // Empty highlight sets
+                QVector<int>(), "",
+                QVector<int>(), "",
+                QVector<int>(), "",
+                QVector<int>(), "",
+                "Filtered ECG Signal",     // Title
+                "Time [s]",                // X-axis label
+                "Voltage [mV]"             // Y-axis label
+            );
+        } catch (const std::exception& e) {
+            qDebug() << "Error updating plot:" << e.what();
+            QMessageBox::warning(this, "Error", 
+                QString("Failed to update plot: %1").arg(e.what()));
         }
     }
 }
