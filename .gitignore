@@ -16,3 +16,4 @@ CMakeLists.txt.user
 .qtcreator/config/qtcreator/debuggers.xml
 
 .qtcreator/config/QtCreator.db
+CMakeLists.txt.user.*

@@ -183,8 +183,8 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             
             // Detect R-peaks using Pan-Tompkins
             std::vector<int> peaks;
-            // rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
-            rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+            rPeaks.setParams("PAN_TOMPKINS", 3, 0.018);
+            // rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
             
             if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                 qDebug() << "R-peaks detection successful";
