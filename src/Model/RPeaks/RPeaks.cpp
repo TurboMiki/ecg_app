@@ -18,7 +18,7 @@ void RPeaks::setParams(const std::string& method, int window_size, double thresh
 
     if (method == "PAN_TOMPKINS") {
         // Ustawienie domyślnych wartości, jeśli użytkownik ich nie podał
-        pan_tompkins_window_length = window_size > 0 ? window_size : static_cast<int>(0.012 * ); // wartość domyślna długości okna
+        pan_tompkins_window_length = window_size > 0 ? window_size : static_cast<int>(0.012 * 250); // wartość domyślna długości okna
         pan_tompkins_threshold = threshold > 0.0 ? threshold : 3; // wartość domyślna progu detekcji
     } else if (method == "HILBERT") {
         hilbert_proximity = proximity > 0 ? proximity : 5; // wartość domyślna odległości między pikami
