@@ -9,18 +9,20 @@
 // Konstruktor klasy
 RPeaks::RPeaks()
     : detection_method("HILBERT"), pan_tompkins_window_length(0), pan_tompkins_threshold(0.0),
-      custom_parameters(false), hilbert_proximity(0), hilbert_custom_proximity(false) {}
+      custom_parameters(false), hilbert_proximity(0), hilbert_threshold(0.0) {}
 
 // Ustawienie parametrów detekcji
 void RPeaks::setParams(const std::string& method, int window_size, double threshold, int proximity) {
     detection_method = method;
-    pan_tompkins_window_length = window_size;
-    pan_tompkins_threshold = threshold;
     custom_parameters = true;
 
-    if (method == "HILBERT" && proximity > 0) {
-        hilbert_proximity = proximity;
-        hilbert_custom_proximity = true;
+    if (method == "PAN_TOMPKINS") {
+        // Ustawienie domyślnych wartości, jeśli użytkownik ich nie podał
+        pan_tompkins_window_length = window_size > 0 ? window_size : static_cast<int>(0.012 * ); // wartość domyślna długości okna
+        pan_tompkins_threshold = threshold > 0.0 ? threshold : 3; // wartość domyślna progu detekcji
+    } else if (method == "HILBERT") {
+        hilbert_proximity = proximity > 0 ? proximity : 5; // wartość domyślna odległości między pikami
+        hilbert_threshold = threshold > 0.0 ? threshold : 1.5; // wartość domyślna progu detekcji
     }
 }
 
@@ -117,7 +119,6 @@ std::vector<std::complex<double>> RPeaks::computeHilbert(const std::vector<doubl
 // =============================
 
 // Filtracja załamków
-
 std::vector<int> RPeaks::filterPeaks(const std::vector<int>& peaks, const std::vector<double>& signal, int proximity) {
     std::vector<int> filtered_peaks;
     for (size_t i = 0; i < peaks.size(); ++i) {
@@ -156,33 +157,29 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
                    [](double val) { return val * val; });
 
     // Integracja ruchomego okna
-    if (pan_tompkins_window_length == 0) {
-        pan_tompkins_window_length = static_cast<int>(0.012 * signal_frequency);
-    }
     std::vector<double> integrated_signal(squared_signal.size() - pan_tompkins_window_length + 1);
     for (size_t i = 0; i < integrated_signal.size(); ++i) {
         integrated_signal[i] = std::accumulate(squared_signal.begin() + i,
                                                squared_signal.begin() + i + pan_tompkins_window_length, 0.0);
     }
 
-    // Ustalenie progu
-    double max_val = *std::max_element(integrated_signal.begin(), integrated_signal.end());
-    double mean_val = std::accumulate(integrated_signal.begin(), integrated_signal.end(), 0.0) / integrated_signal.size();
-    if (pan_tompkins_threshold == 0) {
-        pan_tompkins_threshold = 0.018; //próg stały
-    }
-    // double threshold = (0.6 * mean_val + 0.4 * max_val); //próg dynamiczny 
+    const int refractory_period = static_cast<int>(0.02 * signal_frequency); 
 
-    // Detekcja załamków
     for (size_t i = 1; i < integrated_signal.size() - 1; ++i) {
-        if (integrated_signal[i] > pan_tompkins_threshold && integrated_signal[i] > integrated_signal[i - 1] &&
+        if (integrated_signal[i] > pan_tompkins_threshold &&
+            integrated_signal[i] > integrated_signal[i - 1] &&
             integrated_signal[i] > integrated_signal[i + 1]) {
-            r_peaks.push_back(i);
+            
+            // Sprawdź, czy ostatni wykryty załamek R był wystarczająco dawno
+            if (r_peaks.empty() || i - r_peaks.back() > refractory_period) {
+                r_peaks.push_back(i);
+            }
         }
     }
 
     return true;
 }
+
 
 // =============================
 // Metoda Hilberta
@@ -198,27 +195,23 @@ bool RPeaks::hilbertTransform(const std::vector<double>& signal, std::vector<int
     // Transformacja Hilberta
     auto analytic_signal = computeHilbert(signal);
     std::vector<double> amplitude_envelope(signal.size());
-    for (size_t i = 0; i < signal.size(); ++i) {
-        amplitude_envelope[i] = std::abs(analytic_signal[i]);
-    }
+    std::transform(analytic_signal.begin(), analytic_signal.end(), amplitude_envelope.begin(),
+                   [](const std::complex<double>& val) { return std::abs(val); });
 
-    // Ustawienie proximity
-    int proximity = hilbert_custom_proximity ? hilbert_proximity : static_cast<int>(0.8 * signal_frequency);
+    // Wartości ustawione w setParams
+    int proximity = hilbert_proximity;
+    double threshold = hilbert_threshold;
 
-    // Ustawienie threshold
-    double threshold = 0.3 * (*std::max_element(amplitude_envelope.begin(), amplitude_envelope.end()));
-
-    // Detekcja załamków
+    // Detekcja załamków R
     for (size_t i = 1; i < amplitude_envelope.size() - 1; ++i) {
-        if (amplitude_envelope[i] > threshold && amplitude_envelope[i] > amplitude_envelope[i - 1] &&
+        if (amplitude_envelope[i] > threshold &&
+            amplitude_envelope[i] > amplitude_envelope[i - 1] &&
             amplitude_envelope[i] > amplitude_envelope[i + 1]) {
             r_peaks.push_back(i);
         }
     }
 
-
-
-    // Filtracja
+    // Filtracja załamków
     r_peaks = filterPeaks(r_peaks, signal, proximity);
     return true;
 }

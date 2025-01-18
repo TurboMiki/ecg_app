@@ -45,7 +45,9 @@ private:
     bool custom_parameters;                ///< Flag to check if custom parameters are set.
     int hilbert_proximity; ///< Proximity dla Hilberta, ustawiany przez użytkownika lub domyślny
     bool hilbert_custom_proximity; ///< Flaga sprawdzająca, czy proximity zostało ustawione
-
+    double hilbert_threshold;
+    bool hilbert_custom_threshold;
+    
     // Hilbert transform helper functions
     /**
      * @brief Computes the Hilbert transform of the input signal.
