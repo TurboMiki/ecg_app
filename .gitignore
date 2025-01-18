@@ -2,7 +2,7 @@ build/*
 .vscode
 CMakeLists.txt.user
 100.dat
-.qtcreator/config/*
+.qtcreator/
 .qtcreator\config\QtCreator.db
 .qtcreator\config\QtCreator.ini
 .qtcreator/config/QtCreator.ini

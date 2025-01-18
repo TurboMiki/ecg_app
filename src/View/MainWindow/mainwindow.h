@@ -7,8 +7,10 @@
 #include <Baseline.h>
 
 #include "RPeaks.h"
+#include "Waves.h"
 #include "settingsform.h"
 #include "basic_plot.h"
+#include "waves_plot.h"
 
 enum class PLOT_TYPE{
     RAW_PLOT
@@ -40,6 +42,7 @@ private slots:
     void on_btnRaw_clicked();
     void on_btnFECG_clicked();
     void on_checkBoxRP_stateChanged(int state);
+    void on_checkBoxQRS_stateChanged(int state);
 
     void on_pushButton_clicked();
 
@@ -62,6 +65,8 @@ private:
     Baseline baseline;
     RPeaks rPeaks;
     QList<int> r_peak_positions;
+    std::vector<int> qrs_onsets;
+    std::vector<int> qrs_ends; 
 
 };
 
