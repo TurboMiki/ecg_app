@@ -2,25 +2,27 @@
 #define BASIC_PLOT_H
 
 #include <QWidget>
-#include <QCustomPlot.h>  // Zakładając, że masz zainstalowaną bibliotekę QCustomPlot
+#include "qcustomplot.h"
+#include "Signal.h"
 #include <QString>
 
 class Basic_Plot : public QWidget
 {
-    Q_OBJECT
+    Q_OBJECT  // This is essential!
 
 public:
     explicit Basic_Plot(QWidget *parent = nullptr);
-    ~Basic_Plot();
+    virtual ~Basic_Plot();
 
-    void setTitle(const QString& title);  // Ustawienie tytułu wykresu
-    void updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices,const QString& legend , const QString& title, const QString& xtitle, const QString& ytitle);  // Metoda do rysowania danych
+    void setTitle(const QString& title);
+    void updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices, 
+                        const QString& legend, const QString& title,
+                        const QString& xtitle, const QString& ytitle);
 
-    // Metoda zwracająca widget QCustomPlot (można używać do dalszej konfiguracji wykresu)
     QCustomPlot* getCustomPlot() const { return customPlot; }
 
 private:
-    QCustomPlot *customPlot;  // Wskaźnik na obiekt QCustomPlot
+    QCustomPlot *customPlot;
 };
 
 #endif // BASIC_PLOT_H

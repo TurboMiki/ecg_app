@@ -1,7 +1,5 @@
 #pragma once
-#include "Signal.h"
-
-#include <iostream>
+#include <Signal.h>
 #include <fstream>
 #include <vector>
 #include <cstdint>
@@ -10,13 +8,13 @@ using namespace std;
 
 
 class DataReader {
-    private:
+private:
     static const int bitsize = 12;
 
     string file_path;
     ifstream input_file;
-    double conv_factor;
-    double sample_rate;
+    double conv_factor = 200;
+    double sample_rate = 360;
     chrono::duration<double, milli> time_measure;
 
     streampos bytes;
@@ -35,13 +33,17 @@ class DataReader {
     void load_time();
     int16_t change_if_negative(int16_t input);
 
-    public:
-    DataReader(string file_path, double conv_factor = 20.0, double sample_rate = 360.0);
+public:
+    DataReader(string file_path, double conv_factor = 200.0, double sample_rate = 360.0);
+    DataReader();
     ~DataReader();
+
 
     Signal read_MLII();
     Signal read_V();
 
+    void setPath(string filePath);
+    void readFile();
     void write_MLII(int samples = -1);
     void write_V(int samples = -1);
     void write_time(int samples = -1);
