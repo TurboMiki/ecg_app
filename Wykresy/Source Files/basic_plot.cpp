@@ -6,24 +6,24 @@ Basic_Plot::Basic_Plot(QWidget *parent)
     : QWidget(parent),
     customPlot(new QCustomPlot(this))
 {
-    // Create layout and add QCustomPlot to it
+    // Tworzenie layoutu
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(customPlot);
     setLayout(layout);
 
-    // Setup the plot
+    // Ustawienia wykresu
     customPlot->addGraph();
     customPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::blue, 1));
     customPlot->graph(0)->setLineStyle(QCPGraph::lsLine);
 
-    // Enable legend
+    // Wlaczanie legendy
     customPlot->legend->setVisible(true);
     customPlot->legend->setFont(QFont("Helvetica", 9));
     customPlot->legend->setBrush(QBrush(Qt::white));
     customPlot->legend->setBorderPen(QPen(Qt::black));
 
-    // Setup interactions
+    // Interaktywnosc
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
     customPlot->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     customPlot->axisRect()->setRangeZoom(Qt::Horizontal | Qt::Vertical);
@@ -31,7 +31,7 @@ Basic_Plot::Basic_Plot(QWidget *parent)
 
 Basic_Plot::~Basic_Plot()
 {
-    // QCustomPlot will be automatically deleted by Qt parent-child mechanism
+    // Destruktor
 }
 
 void Basic_Plot::setTitle(const QString& title)
@@ -41,15 +41,17 @@ void Basic_Plot::setTitle(const QString& title)
         if (qobject_cast<QCPTextElement*>(customPlot->plotLayout()->element(0, 0)))
             customPlot->plotLayout()->remove(customPlot->plotLayout()->element(0, 0));
     }
-    
+
     QCPTextElement *titleElement = new QCPTextElement(customPlot, title, QFont("Helvetica", 12, QFont::Bold));
     customPlot->plotLayout()->insertRow(0);
     customPlot->plotLayout()->addElement(0, 0, titleElement);
 }
 
-void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices, const QString& legend, const QString& title, const QString& xtitle, const QString& ytitle)
+void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices,
+                                 const QString& legend,const QString& indexlegend ,const QString& title,
+                                 const QString& xtitle, const QString& ytitle)
 {
-    // Convert std::vector to QVector
+    // zmioana elementow klasy signal na QT tak by dalo sie je wyplotowac
     QVector<double> x(signal.getX().begin(), signal.getX().end());
     QVector<double> y(signal.getY().begin(), signal.getY().end());
 
@@ -57,24 +59,24 @@ void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highl
     customPlot->addGraph();
     customPlot->graph(0)->setData(x, y);
     customPlot->graph(0)->setName(legend);
-    
-    // Set axis labels
+
+    // Nazwy osi
     customPlot->xAxis->setLabel(xtitle);
     customPlot->yAxis->setLabel(ytitle);
 
-    // Calculate y axis range with some margin
+    // Calculate y axis zakresu z marginesem
     auto [minIt, maxIt] = std::minmax_element(y.begin(), y.end());
     double yMin = *minIt;
     double yMax = *maxIt;
-    double margin = (yMax - yMin) * 0.1; // 10% margin
+    double margin = (yMax - yMin) * 0.1; // 10% marginesu
     customPlot->yAxis->setRange(yMin - margin, yMax + margin);
 
-    // Set x axis range
+    // ustawienie zasiegu osi
     if (!x.empty()) {
         customPlot->xAxis->setRange(x.front(), x.back());
     }
 
-    // Add highlighted points if any
+    // Dodanie wyroznionych elemntow jezeli takie sa
     if (!highlightIndices.isEmpty()) {
         customPlot->addGraph();
         customPlot->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::red, 10));
@@ -89,7 +91,7 @@ void Basic_Plot::updateBasicPlot(const Signal& signal, const QVector<int>& highl
         }
 
         customPlot->graph(1)->setData(highlightX, highlightY);
-        customPlot->graph(1)->setName("Highlights");
+        customPlot->graph(1)->setName(indexlegend);
     }
 
     setTitle(title);
