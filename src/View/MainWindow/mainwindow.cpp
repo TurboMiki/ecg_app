@@ -2,6 +2,10 @@
 #include "ui_mainwindow.h"
 #include "settingsform.h"
 
+/////////////////////////////////
+#include "waves.cpp"
+////////////////////////////////
+
 #include "basic_plot.h"
 
 #include "MovingMeanFilter.h"
@@ -183,8 +187,8 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             
             // Detect R-peaks using Pan-Tompkins
             std::vector<int> peaks;
-            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
-            // rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+            // rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
             
             if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                 qDebug() << "R-peaks detection successful";
@@ -258,123 +262,135 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
 
 void MainWindow::on_checkBoxQRS_stateChanged(int state)
 {
-//     if (state == Qt::Checked) {
-//         try {
-//             qDebug() << "Starting QRS detection...";
+    if (state == Qt::Checked) {
+        try {
+            qDebug() << "Starting wave detection...";
             
-//             // Get and filter the signal
-//             Signal inputSignal = fileReader.read_MLII();
-//             Signal filteredSignal = baseline.filterSignal(inputSignal);
+            // Get and filter the signal
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
             
-//             // Detect QRS complexes directly from filtered signal
-//             auto [qrsOnsets, qrsEnds] = detectQRSOnsetEnd(filteredSignal, {});
-            
-//             qDebug() << "QRS detection successful";
-//             qDebug() << "Total QRS complexes detected:" << qrsOnsets.size();
-            
-//             // Convert detected points to QVectors for highlighting
-//             QVector<int> onsetHighlights;
-//             QVector<int> endHighlights;
-//             QVector<int> complexHighlights;
-            
-//             // Store detected positions and prepare highlights
-//             qrs_onsets = qrsOnsets;
-//             qrs_ends = qrsEnds;
-            
-//             for (size_t i = 0; i < qrsOnsets.size() && i < qrsEnds.size(); ++i) {
-//                 onsetHighlights.append(qrsOnsets[i]);
-//                 endHighlights.append(qrsEnds[i]);
-                
-//                 // Add all points between onset and end for complex highlighting
-//                 for (int j = qrsOnsets[i]; j <= qrsEnds[i]; ++j) {
-//                     complexHighlights.append(j);
-//                 }
-//             }
+            // First detect R-peaks if not already detected
+            if (r_peak_positions.isEmpty()) {
+                std::vector<int> peaks;
+                rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+                if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                    throw std::runtime_error("R-peaks detection failed");
+                }
+                r_peak_positions.reserve(peaks.size());
+                for (const auto& peak : peaks) {
+                    r_peak_positions.append(peak);
+                }
+            }
 
-//             // Update the plot
-//             QLayout* layout = ui->frame_2->layout();
-//             if (!layout) {
-//                 layout = new QVBoxLayout(ui->frame_2);
-//                 ui->frame_2->setLayout(layout);
-//             }
+            // Convert QList to std::vector for R-peaks
+            std::vector<int> r_peaks;
+            r_peaks.reserve(r_peak_positions.size());
+            for (int peak : r_peak_positions) {
+                r_peaks.push_back(peak);
+            }
 
-//             // Clear existing widgets
-//             QLayoutItem* child;
-//             while ((child = layout->takeAt(0)) != nullptr) {
-//                 delete child->widget();
-//                 delete child;
-//             }
+            // Detect QRS complexes
+            auto [qrsOnsets, qrsEnds] = detectQRSOnsetEnd(filteredSignal, r_peaks);
+            
+            // Detect P waves
+            auto [pOnsets, pPeaks, pEnds] = detectPWave(filteredSignal, qrsOnsets);
+            
+            // Detect T wave ends
+            auto tEnds = detectTEnds(filteredSignal, pOnsets);
 
-//             // Create new waves plot with QRS complexes highlighted
-//             Waves_Plot* plotWidget = new Waves_Plot();
-//             layout->addWidget(plotWidget);
+            qDebug() << "Wave detection successful:";
+            qDebug() << "QRS complexes:" << qrsOnsets.size();
+            qDebug() << "P waves:" << pOnsets.size();
+            qDebug() << "T wave ends:" << tEnds.size();
             
-//             // Update plot with all highlights
-//             plotWidget->updateWavesPlot(
-//                 filteredSignal,
-//                 "ECG Signal",                  // Main signal legend
-//                 complexHighlights, "QRS Complex",   // First highlight set
-//                 onsetHighlights, "QRS Onset",      // Second highlight set
-//                 endHighlights, "QRS End",          // Third highlight set
-//                 QVector<int>(), "",               // Empty fourth highlight set
-//                 QVector<int>(), "",               // Empty fifth highlight set
-//                 "ECG Signal with QRS Complexes",   // Title
-//                 "Time [s]",                       // X-axis label
-//                 "Voltage [mV]"                    // Y-axis label
-//             );
-            
-//         } catch (const std::exception& e) {
-//             qDebug() << "Error during QRS detection:" << e.what();
-//             ui->checkBoxQRS->setChecked(false);
-//             QMessageBox::warning(this, "Error", 
-//                 QString("Failed to detect QRS complexes: %1").arg(e.what()));
-//         }
-//     } else {
-//         // When unchecked, clear highlights and redraw
-//         try {
-//             Signal inputSignal = fileReader.read_MLII();
-//             Signal filteredSignal = baseline.filterSignal(inputSignal);
-            
-//             // Clear stored QRS positions
-//             qrs_onsets.clear();
-//             qrs_ends.clear();
-            
-//             QLayout* layout = ui->frame_2->layout();
-//             if (!layout) {
-//                 layout = new QVBoxLayout(ui->frame_2);
-//                 ui->frame_2->setLayout(layout);
-//             }
+            // Convert all detected points to QVectors for plotting
+            QVector<int> qrsOnsetsQV = QVector<int>(qrsOnsets.begin(), qrsOnsets.end());
+            QVector<int> qrsEndsQV = QVector<int>(qrsEnds.begin(), qrsEnds.end());
+            QVector<int> pOnsetsQV = QVector<int>(pOnsets.begin(), pOnsets.end());
+            QVector<int> pEndsQV = QVector<int>(pEnds.begin(), pEnds.end());
+            QVector<int> tEndsQV = QVector<int>(tEnds.begin(), tEnds.end());
 
-//             // Clear existing widgets
-//             QLayoutItem* child;
-//             while ((child = layout->takeAt(0)) != nullptr) {
-//                 delete child->widget();
-//                 delete child;
-//             }
+            // Update the plot
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
 
-//             // Create new waves plot without highlights
-//             Waves_Plot* plotWidget = new Waves_Plot();
-//             layout->addWidget(plotWidget);
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new waves plot
+            Waves_Plot* plotWidget = new Waves_Plot();
+            layout->addWidget(plotWidget);
             
-//             // Update plot with no highlights
-//             plotWidget->updateWavesPlot(
-//                 filteredSignal,
-//                 "ECG Signal",                  // Main signal legend
-//                 QVector<int>(), "",            // Empty highlight sets
-//                 QVector<int>(), "",
-//                 QVector<int>(), "",
-//                 QVector<int>(), "",
-//                 QVector<int>(), "",
-//                 "Filtered ECG Signal",         // Title
-//                 "Time [s]",                    // X-axis label
-//                 "Voltage [mV]"                 // Y-axis label
-//             );
-//         } catch (const std::exception& e) {
-//             qDebug() << "Error updating plot:" << e.what();
-//             QMessageBox::warning(this, "Error", 
-//                 QString("Failed to update plot: %1").arg(e.what()));
-//         }
-//     }
+            // Update plot with all wave components
+            plotWidget->updateWavesPlot(
+                filteredSignal,
+                "ECG Signal",                  // Main signal legend
+                qrsOnsetsQV, "QRS Onset",      // First highlight set
+                qrsEndsQV, "QRS End",          // Second highlight set
+                pOnsetsQV, "P Onset",          // Third highlight set
+                pEndsQV, "P End",              // Fourth highlight set
+                tEndsQV, "T End",              // Fifth highlight set
+                "ECG Signal with Wave Components",  // Title
+                "Time [s]",                        // X-axis label
+                "Voltage [mV]"                     // Y-axis label
+            );
+            
+        } catch (const std::exception& e) {
+            qDebug() << "Error during wave detection:" << e.what();
+            ui->checkBoxQRS->setChecked(false);
+            QMessageBox::warning(this, "Error", 
+                QString("Failed to detect waves: %1").arg(e.what()));
+        }
+    } else {
+        // When unchecked, clear highlights and redraw
+        try {
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new waves plot without highlights
+            Waves_Plot* plotWidget = new Waves_Plot();
+            layout->addWidget(plotWidget);
+            
+            // Update plot with no highlights
+            plotWidget->updateWavesPlot(
+                filteredSignal,
+                "ECG Signal",              // Main signal legend
+                QVector<int>(), "",        // Empty highlight sets
+                QVector<int>(), "",
+                QVector<int>(), "",
+                QVector<int>(), "",
+                QVector<int>(), "",
+                "Filtered ECG Signal",     // Title
+                "Time [s]",                // X-axis label
+                "Voltage [mV]"             // Y-axis label
+            );
+        } catch (const std::exception& e) {
+            qDebug() << "Error updating plot:" << e.what();
+            QMessageBox::warning(this, "Error", 
+                QString("Failed to update plot: %1").arg(e.what()));
+        }
+    }
 }
 
 void MainWindow::on_btnFECG_clicked()
