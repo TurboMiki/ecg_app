@@ -23,6 +23,17 @@ find_package(Qt6 REQUIRED COMPONENTS
     PrintSupport
 )
 
+# Find FFTW using a more direct approach
+find_library(FFTW_LIBRARIES NAMES fftw3 libfftw3 REQUIRED)
+find_path(FFTW_INCLUDE_DIRS fftw3.h REQUIRED)
+
+if(NOT FFTW_LIBRARIES OR NOT FFTW_INCLUDE_DIRS)
+    message(FATAL_ERROR "FFTW library not found!")
+endif()
+
+message(STATUS "Found FFTW libraries: ${FFTW_LIBRARIES}")
+message(STATUS "Found FFTW includes: ${FFTW_INCLUDE_DIRS}")
+
 add_subdirectory(src/Model/Baseline)
 
 # Define sources - exclude test files
@@ -57,8 +68,8 @@ target_include_directories(ecg_app PUBLIC
     include/Model/HeartClass
     include/View
     include/View/MainWindow
-    include/ViewModel
     "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"
+    ${FFTW_INCLUDE_DIRS}
 )
 
 # Link Qt libraries and visualization
@@ -69,6 +80,7 @@ target_link_libraries(ecg_app PUBLIC
     Qt6::PrintSupport
     visualization
     baseline
+    ${FFTW_LIBRARIES}
 )
 
 # Executable
@@ -94,6 +106,7 @@ target_include_directories(test_signal PRIVATE
     include/View
     include/ViewModel
     "${CMAKE_SOURCE_DIR}/Wykresy/Header Files"
+    ${FFTW_INCLUDE_DIRS}
 )                                            
 target_link_libraries(test_signal PRIVATE 
     gtest 
@@ -103,4 +116,5 @@ target_link_libraries(test_signal PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::PrintSupport
+    ${FFTW_LIBRARIES}
 )

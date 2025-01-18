@@ -1,7 +1,7 @@
 # Build stage
 FROM stateoftheartio/qt6:6.8-gcc-aqt AS builder
 
-# Install additional dependencies including Qt Creator
+# Install additional dependencies including Qt Creator and FFTW
 RUN sudo apt-get update && sudo apt-get install -y \
     build-essential \
     cmake \
@@ -17,7 +17,11 @@ RUN sudo apt-get update && sudo apt-get install -y \
     libxcb-*-dev \
     libcups2-dev \
     qtcreator \
-    && sudo rm -rf /var/lib/apt/lists/*
+    libfftw3-dev \
+    libfftw3-3 \
+    libfftw3-bin \
+    && sudo rm -rf /var/lib/apt/lists/* \
+    && sudo ldconfig  # Update the dynamic linker run-time bindings
 
 # Create and set proper permissions for project directory and Qt Creator configs
 USER root
@@ -73,9 +77,11 @@ RUN apt-get update && \
     mesa-utils \
     xvfb \
     libcups2 \
+    libfftw3-3 \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /tmp/runtime-root \
-    && chmod 700 /tmp/runtime-root
+    && chmod 700 /tmp/runtime-root \
+    && ldconfig  # Update the dynamic linker run-time bindings
 
 WORKDIR /app
 COPY --from=builder /home/user/project/build/ECGProcessing /app/

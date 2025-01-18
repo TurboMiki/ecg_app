@@ -4,13 +4,13 @@
 #include <iostream>
 #include <complex>
 #include <stdexcept>
+#include <fftw3.h> 
 
 // Konstruktor klasy
 RPeaks::RPeaks()
     : detection_method("HILBERT"), pan_tompkins_window_length(0), pan_tompkins_threshold(0.0),
       custom_parameters(false), hilbert_proximity(0), hilbert_custom_proximity(false) {}
-      
-      
+
 // Ustawienie parametrów detekcji
 void RPeaks::setParams(const std::string& method, int window_size, double threshold, int proximity) {
     detection_method = method;
@@ -35,40 +35,39 @@ bool RPeaks::detectRPeaks(const std::vector<double>& signal, double signal_frequ
 }
 
 // =============================
-// Obliczenia DFT i IDFT
+// Transformacja FFT i IFFT z FFTW
 // =============================
 
-// Obliczanie DFT
-std::vector<std::complex<double>> computeDFT(const std::vector<std::complex<double>>& input) {
+// Obliczanie FFT
+std::vector<std::complex<double>> computeFFT(const std::vector<std::complex<double>>& input) {
     size_t N = input.size();
     std::vector<std::complex<double>> output(N);
-    const double PI = std::acos(-1);
 
-    for (size_t k = 0; k < N; ++k) {
-        std::complex<double> sum(0.0, 0.0);
-        for (size_t n = 0; n < N; ++n) {
-            double angle = -2.0 * PI * k * n / N;
-            sum += input[n] * std::complex<double>(std::cos(angle), std::sin(angle));
-        }
-        output[k] = sum;
-    }
+    fftw_complex* in = reinterpret_cast<fftw_complex*>(const_cast<std::complex<double>*>(input.data()));
+    fftw_complex* out = reinterpret_cast<fftw_complex*>(output.data());
+
+    fftw_plan plan = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
 
     return output;
 }
 
-// Obliczanie IDFT
-std::vector<std::complex<double>> computeIDFT(const std::vector<std::complex<double>>& input) {
+// Obliczanie odwrotnego FFT (IFFT)
+std::vector<std::complex<double>> computeIFFT(const std::vector<std::complex<double>>& input) {
     size_t N = input.size();
     std::vector<std::complex<double>> output(N);
-    const double PI = std::acos(-1);
 
-    for (size_t n = 0; n < N; ++n) {
-        std::complex<double> sum(0.0, 0.0);
-        for (size_t k = 0; k < N; ++k) {
-            double angle = 2.0 * PI * k * n / N;
-            sum += input[k] * std::complex<double>(std::cos(angle), std::sin(angle));
-        }
-        output[n] = sum / static_cast<double>(N);
+    fftw_complex* in = reinterpret_cast<fftw_complex*>(const_cast<std::complex<double>*>(input.data()));
+    fftw_complex* out = reinterpret_cast<fftw_complex*>(output.data());
+
+    fftw_plan plan = fftw_plan_dft_1d(N, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    // Normalizacja wyników
+    for (auto& value : output) {
+        value /= static_cast<double>(N);
     }
 
     return output;
@@ -91,8 +90,8 @@ std::vector<std::complex<double>> RPeaks::computeHilbert(const std::vector<doubl
         complex_signal[i] = std::complex<double>(signal[i], 0.0);
     }
 
-    // Obliczanie DFT sygnału
-    auto fft_signal = computeDFT(complex_signal);
+    // Obliczanie FFT sygnału
+    auto fft_signal = computeFFT(complex_signal);
 
     // Tworzenie filtra Hilberta
     std::vector<std::complex<double>> hilbert_filter(N, {0.0, 0.0});
@@ -109,8 +108,8 @@ std::vector<std::complex<double>> RPeaks::computeHilbert(const std::vector<doubl
         fft_signal[k] *= hilbert_filter[k];
     }
 
-    // Obliczanie odwrotnej DFT
-    return computeIDFT(fft_signal);
+    // Obliczanie odwrotnej FFT
+    return computeIFFT(fft_signal);
 }
 
 // =============================
@@ -169,11 +168,14 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
     // Ustalenie progu
     double max_val = *std::max_element(integrated_signal.begin(), integrated_signal.end());
     double mean_val = std::accumulate(integrated_signal.begin(), integrated_signal.end(), 0.0) / integrated_signal.size();
-    double threshold = (0.6 * mean_val + 0.4 * max_val);
+    if (pan_tompkins_threshold == 0) {
+        pan_tompkins_threshold = 0.018; //próg stały
+    }
+    // double threshold = (0.6 * mean_val + 0.4 * max_val); //próg dynamiczny 
 
     // Detekcja załamków
     for (size_t i = 1; i < integrated_signal.size() - 1; ++i) {
-        if (integrated_signal[i] > threshold && integrated_signal[i] > integrated_signal[i - 1] &&
+        if (integrated_signal[i] > pan_tompkins_threshold && integrated_signal[i] > integrated_signal[i - 1] &&
             integrated_signal[i] > integrated_signal[i + 1]) {
             r_peaks.push_back(i);
         }
@@ -204,7 +206,7 @@ bool RPeaks::hilbertTransform(const std::vector<double>& signal, std::vector<int
     int proximity = hilbert_custom_proximity ? hilbert_proximity : static_cast<int>(0.8 * signal_frequency);
 
     // Ustawienie threshold
-    double threshold = 0.2 * (*std::max_element(amplitude_envelope.begin(), amplitude_envelope.end()));
+    double threshold = 0.3 * (*std::max_element(amplitude_envelope.begin(), amplitude_envelope.end()));
 
     // Detekcja załamków
     for (size_t i = 1; i < amplitude_envelope.size() - 1; ++i) {
@@ -213,6 +215,8 @@ bool RPeaks::hilbertTransform(const std::vector<double>& signal, std::vector<int
             r_peaks.push_back(i);
         }
     }
+
+
 
     // Filtracja
     r_peaks = filterPeaks(r_peaks, signal, proximity);

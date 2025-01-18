@@ -183,8 +183,8 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             
             // Detect R-peaks using Pan-Tompkins
             std::vector<int> peaks;
-            // rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
-            rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+            rPeaks.setParams("PAN_TOMPKINS", 3, 0.018);
+            // rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
             
             if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                 qDebug() << "R-peaks detection successful";
@@ -252,6 +252,117 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
                 "Time [s]", "Voltage [mV]");
         } catch (const std::exception& e) {
             qDebug() << "Error updating plot:" << e.what();
+        }
+    }
+}
+
+void MainWindow::on_checkBoxQRS_stateChanged(int state)
+{
+    if (state == Qt::Checked) {
+        try {
+            qDebug() << "Starting wave detection...";
+            
+            // Get and filter the signal
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            // First detect R-peaks if not already detected
+            if (r_peak_positions.isEmpty()) {
+                std::vector<int> peaks;
+                rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+                if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                    throw std::runtime_error("R-peaks detection failed");
+                }
+                r_peak_positions.reserve(peaks.size());
+                for (const auto& peak : peaks) {
+                    r_peak_positions.append(peak);
+                }
+            }
+
+            // Create Waves detector and process
+            Waves waveDetector(filteredSignal, r_peak_positions);
+            if (!waveDetector.detectWaves()) {
+                throw std::runtime_error("Wave detection failed");
+            }
+
+            // Update the plot
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new waves plot
+            Waves_Plot* plotWidget = new Waves_Plot();
+            layout->addWidget(plotWidget);
+            
+            // Update plot with all wave components
+            plotWidget->updateWavesPlot(
+                filteredSignal,
+                "ECG Signal",                               // Main signal legend
+                waveDetector.getQRSOnsets(), "QRS Onset",   // First highlight set
+                waveDetector.getQRSEnds(), "QRS End",       // Second highlight set
+                waveDetector.getPOnsets(), "P Onset",       // Third highlight set
+                waveDetector.getPEnds(), "P End",           // Fourth highlight set
+                waveDetector.getTEnds(), "T End",           // Fifth highlight set
+                "ECG Signal with Wave Components",          // Title
+                "Time [s]",                                 // X-axis label
+                "Voltage [mV]"                              // Y-axis label
+            );
+            
+        } catch (const std::exception& e) {
+            qDebug() << "Error during wave detection:" << e.what();
+            ui->checkBoxQRS->setChecked(false);
+            QMessageBox::warning(this, "Error", 
+                QString("Failed to detect waves: %1").arg(e.what()));
+        }
+    } else {
+        // When unchecked, clear highlights and redraw
+        try {
+            Signal inputSignal = fileReader.read_MLII();
+            Signal filteredSignal = baseline.filterSignal(inputSignal);
+            
+            QLayout* layout = ui->frame_2->layout();
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
+
+            // Clear existing widgets
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
+
+            // Create new waves plot without highlights
+            Waves_Plot* plotWidget = new Waves_Plot();
+            layout->addWidget(plotWidget);
+            
+            // Update plot with no highlights
+            plotWidget->updateWavesPlot(
+                filteredSignal,
+                "ECG Signal",              // Main signal legend
+                QVector<int>(), "",        // Empty highlight sets
+                QVector<int>(), "",
+                QVector<int>(), "",
+                QVector<int>(), "",
+                QVector<int>(), "",
+                "Filtered ECG Signal",     // Title
+                "Time [s]",                // X-axis label
+                "Voltage [mV]"             // Y-axis label
+            );
+        } catch (const std::exception& e) {
+            qDebug() << "Error updating plot:" << e.what();
+            QMessageBox::warning(this, "Error", 
+                QString("Failed to update plot: %1").arg(e.what()));
         }
     }
 }
@@ -333,93 +444,3 @@ void MainWindow::on_btnFECG_clicked()
             "An unknown error occurred while processing the data.");
     }
 }
-
-// Complete script for btnFECG function with Savitzky-Golay filter
-
-
-// void MainWindow::on_btnFECG_clicked()
-// {
-//     if (ui->linePath->text().isEmpty()) {
-//         QMessageBox::warning(this, "Warning", "Please select a file first!");
-//         return;
-//     }
-
-//     try {
-//         // Show processing dialog
-//         QProgressDialog progress("Processing signal...", "Cancel", 0, 100, this);
-//         progress.setWindowModality(Qt::WindowModal);
-//         progress.setMinimumDuration(0);
-//         progress.setValue(0);
-        
-//         // Get the input signal
-//         Signal inputSignal = fileReader.read_MLII();
-//         progress.setValue(20);
-        
-//         if (inputSignal.getY().empty()) {
-//             QMessageBox::warning(this, "Warning", "Input signal is empty!");
-//             return;
-//         }
-
-//         // Using QElapsedTimer to track processing time
-//         QElapsedTimer timer;
-//         timer.start();
-        
-//         // Create and apply Savitzky-Golay filter with smaller window
-//         auto savitzkyGolayFilter = std::make_unique<SavitzkyGolayFilter>();
-//         savitzkyGolayFilter->set(23, 2);  // Window size matching required 23 points, order 2 for faster processing
-//         progress.setValue(40);
-
-//         try {
-//             baseline.setFilter(std::move(savitzkyGolayFilter));
-//             Signal filteredSignal = baseline.filterSignal(inputSignal);
-//             progress.setValue(60);
-
-//             // Check processing time
-//             qint64 elapsed = timer.elapsed();
-//             if (elapsed > 5000) { // If processing took more than 5 seconds
-//                 QMessageBox::warning(this, "Warning", 
-//                     QString("Signal processing took %1 seconds, which is longer than expected.").arg(elapsed/1000.0));
-//             }
-
-//             if (filteredSignal.getY().empty()) {
-//                 QMessageBox::warning(this, "Warning", "Filtering resulted in empty signal!");
-//                 return;
-//             }
-
-//             // Ensure frame_2 has a layout
-//             QLayout* layout = ui->frame_2->layout();
-//             if (!layout) {
-//                 layout = new QVBoxLayout(ui->frame_2);
-//                 ui->frame_2->setLayout(layout);
-//             }
-//             progress.setValue(80);
-
-//             // Clear any existing widgets in the layout
-//             QLayoutItem* child;
-//             while ((child = layout->takeAt(0)) != nullptr) {
-//                 delete child->widget();
-//                 delete child;
-//             }
-
-//             // Create and add filtered signal plot
-//             Basic_Plot* filteredPlotWidget = new Basic_Plot();
-//             layout->addWidget(filteredPlotWidget);
-//             QVector<int> highlights;
-//             filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
-//                 "Savitzky-Golay Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
-//             progress.setValue(100);
-
-//         } catch (const std::exception& e) {
-//             QMessageBox::critical(this, "Error", 
-//                 QString("Filter application failed: %1").arg(e.what()));
-//             return;
-//         }
-
-//     } catch (const std::exception& e) {
-//         QMessageBox::critical(this, "Error", 
-//             QString("Failed to process data: %1").arg(e.what()));
-//     } catch (...) {
-//         QMessageBox::critical(this, "Error", 
-//             "An unknown error occurred while processing the data.");
-//     }
-// }
