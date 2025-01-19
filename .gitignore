@@ -17,3 +17,6 @@ CMakeLists.txt.user
 
 .qtcreator/config/QtCreator.db
 CMakeLists.txt.user.*
+
+.qtcreator/config/*
+/.vs

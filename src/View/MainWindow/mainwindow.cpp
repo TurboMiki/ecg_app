@@ -3,6 +3,9 @@
 #include "settingsform.h"
 
 #include "basic_plot.h"
+#include "waves_plot.h"
+#include "scatter_plot.h"
+#include "histogram_plot.h"
 
 #include "MovingMeanFilter.h"
 #include "ButterworthFilter.h"
@@ -126,7 +129,7 @@ void MainWindow::on_btnRaw_clicked()
         layout->addWidget(plotWidget);
         QVector<int> highlights;
         plotWidget->updateBasicPlot(inputSignal, highlights, 
-            "Raw ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+            "Raw ECG Signal", "Hajlajts","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
@@ -149,6 +152,354 @@ void MainWindow::on_pushButton_clicked()
     newWindow->show();
 }
 
+void MainWindow::on_btnHRV_1_clicked()
+{
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Show processing dialog
+        QProgressDialog progress("Processing HRV...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+
+        // Get the ECG signal
+        Signal inputSignal = fileReader.read_MLII();
+        progress.setValue(20);
+
+        // Filter the signal
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        progress.setValue(40);
+
+        // Detect R-peaks if not already detected
+        if (r_peak_positions.isEmpty()) {
+            std::vector<int> peaks;
+            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                throw std::runtime_error("R-peaks detection failed");
+            }
+            r_peak_positions.reserve(peaks.size());
+            for (const auto& peak : peaks) {
+                r_peak_positions.append(peak);
+            }
+        }
+        progress.setValue(60);
+
+        // Create R-peaks signal for HRV analysis
+        std::vector<double> peakTimes;
+        for (int idx : r_peak_positions) {
+            peakTimes.push_back(filteredSignal.getX()[idx]);
+        }
+        Signal rPeaksSignal(peakTimes, std::vector<double>(peakTimes.size(), 1.0), 
+                           filteredSignal.getSamplingRate());
+
+        // Process HRV
+        HRV_1 hrvAnalyzer(rPeaksSignal, filteredSignal);
+        hrvAnalyzer.process();
+        progress.setValue(80);
+
+        // Get results and display them
+        auto timeParams = hrvAnalyzer.getTimeParams();
+        auto freqParams = hrvAnalyzer.getFreqParams();
+        displayHRVResults(timeParams, freqParams);
+        
+        progress.setValue(100);
+
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process HRV: %1").arg(e.what()));
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred while processing HRV.");
+    }
+}
+
+void MainWindow::on_btnHRV2_PC_clicked()
+{
+    qDebug() << "Starting HRV2 Poincaré plot analysis...";
+
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Show processing dialog
+        QProgressDialog progress("Processing HRV...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+
+        // Get and process the ECG signal
+        Signal inputSignal = fileReader.read_MLII();
+        qDebug() << "Input signal stats - Size:" << inputSignal.getSize() 
+                 << "Sampling rate:" << inputSignal.getSamplingRate();
+        progress.setValue(20);
+
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        progress.setValue(30);
+        
+        // Clear and detect R-peaks
+        r_peak_positions.clear();
+        std::vector<int> peaks;
+        rPeaks.setParams("PAN_TOMPKINS", 3, 0.018);
+        
+        if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+            throw std::runtime_error("R-peaks detection failed");
+        }
+        
+        qDebug() << "Detected" << peaks.size() << "R-peaks";
+        if (peaks.size() < 2) {
+            throw std::runtime_error("Insufficient R-peaks for HRV analysis");
+        }
+        progress.setValue(50);
+
+        // Convert peaks to time domain
+        std::vector<double> peakTimes;
+        for (int idx : peaks) {
+            if (idx >= 0 && idx < filteredSignal.getX().size()) {
+                // Convert to seconds
+                peakTimes.push_back(idx / static_cast<double>(inputSignal.getSamplingRate()));
+            }
+        }
+        
+        qDebug() << "Converting" << peakTimes.size() << "peaks to signal";
+        progress.setValue(60);
+
+        // Create signal for HRV analysis
+        Signal rPeaksSignal(peakTimes, 
+                          std::vector<double>(peakTimes.size(), 1.0),
+                          inputSignal.getSamplingRate());
+
+        // Process HRV
+        qDebug() << "Starting HRV2 processing...";
+        hrv2.process(rPeaksSignal);
+        progress.setValue(70);
+
+        // Get Poincaré plot data and validate
+        Signal poincarePlot = hrv2.getPoincarePlot();
+        auto params = hrv2.getParams();
+        
+        qDebug() << "Retrieved Poincaré plot data - Size:" << poincarePlot.getSize();
+        progress.setValue(80);
+
+        if (poincarePlot.getSize() == 0) {
+            throw std::runtime_error("Invalid Poincaré plot data generated");
+        }
+
+        // Update UI
+        QLayout* layout = ui->frame_2->layout();
+        if (!layout) {
+            layout = new QVBoxLayout(ui->frame_2);
+            ui->frame_2->setLayout(layout);
+        }
+
+        // Clear existing widgets
+        while (QLayoutItem* item = layout->takeAt(0)) {
+            delete item->widget();
+            delete item;
+        }
+        progress.setValue(90);
+
+        // Create and setup scatter plot
+        Scatter_Plot* plotWidget = new Scatter_Plot();
+        layout->addWidget(plotWidget);
+
+        // From HRV_2 parameters:
+        // params[6] = SD1
+        // params[7] = SD2
+        // params[8] = Center X (mean RR)
+        // params[9] = Center Y (mean RR)
+        
+        qDebug() << "Updating Poincaré plot with:"
+                 << "\nSD1:" << params[6]
+                 << "\nSD2:" << params[7]
+                 << "\nCenter X:" << params[8]
+                 << "\nCenter Y:" << params[9];
+
+        plotWidget->updateScatterPlot(
+            poincarePlot,          // Signal containing RRn vs RRn+1 points
+            params[8],             // Center X (mean RR)
+            params[9],             // Center Y (mean RR)
+            params[6],             // SD1 (shorter axis)
+            params[7],             // SD2 (longer axis)
+            "RR Intervals",        // Legend for points
+            "SD Ellipse",          // Legend for ellipse
+            "Poincaré Plot",       // Title
+            "RR(n) [s]",          // X-axis label
+            "RR(n+1) [s]"         // Y-axis label
+        );
+
+        // Show SD1/SD2 results
+        QString results = QString("Poincaré Plot Parameters:\n")
+                         + QString("SD1: %1 ms\n").arg(params[6] * 1000, 0, 'f', 2)
+                         + QString("SD2: %1 ms\n").arg(params[7] * 1000, 0, 'f', 2)
+                         + QString("SD1/SD2: %1").arg(params[6] / params[7], 0, 'f', 3);
+        QMessageBox::information(this, "HRV Parameters", results);
+
+        progress.setValue(100);
+
+    } catch (const std::exception& e) {
+        qDebug() << "Error in HRV2 Poincaré plot analysis:" << e.what();
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process HRV: %1").arg(e.what()));
+    }
+}
+
+void MainWindow::on_btnHRV2_hist_clicked()
+{
+    qDebug() << "Starting HRV2 histogram analysis...";
+
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Get and process the ECG signal
+        Signal inputSignal = fileReader.read_MLII();
+        qDebug() << "Input signal stats - Size:" << inputSignal.getSize() 
+                 << "Sampling rate:" << inputSignal.getSamplingRate();
+
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        
+        // Clear and detect R-peaks
+        r_peak_positions.clear();
+        std::vector<int> peaks;
+        rPeaks.setParams("PAN_TOMPKINS", 3, 0.018);
+        
+        if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+            throw std::runtime_error("R-peaks detection failed");
+        }
+        
+        qDebug() << "Detected" << peaks.size() << "R-peaks";
+        if (peaks.size() < 2) {
+            throw std::runtime_error("Insufficient R-peaks for HRV analysis");
+        }
+
+        // Convert peaks to time domain
+        std::vector<double> peakTimes;
+        for (int idx : peaks) {
+            if (idx >= 0 && idx < filteredSignal.getX().size()) {
+                // Convert to seconds
+                peakTimes.push_back(idx / static_cast<double>(inputSignal.getSamplingRate()));
+            }
+        }
+        
+        qDebug() << "Converting" << peakTimes.size() << "peaks to signal";
+        
+        // Validate peak times
+        if (peakTimes.size() < 2) {
+            throw std::runtime_error("Insufficient valid peak times for analysis");
+        }
+
+        // Create signal for HRV analysis
+        Signal rPeaksSignal(peakTimes, 
+                          std::vector<double>(peakTimes.size(), 1.0),
+                          inputSignal.getSamplingRate());
+
+        // Process HRV
+        qDebug() << "Starting HRV2 processing...";
+        hrv2.process(rPeaksSignal);
+
+        // Get histogram and validate
+        Signal histogram = hrv2.getRHist();
+        qDebug() << "Retrieved histogram - Size X:" << histogram.getX().size() 
+                 << "Y:" << histogram.getY().size();
+
+        if (histogram.getX().empty() || histogram.getY().empty()) {
+            throw std::runtime_error("Invalid histogram data generated");
+        }
+
+        // Update UI
+        QLayout* layout = ui->frame_2->layout();
+        if (!layout) {
+            layout = new QVBoxLayout(ui->frame_2);
+            ui->frame_2->setLayout(layout);
+        }
+
+        // Clear existing widgets
+        while (QLayoutItem* item = layout->takeAt(0)) {
+            delete item->widget();
+            delete item;
+        }
+
+        // Create and setup histogram plot
+        Histogram_Plot* plotWidget = new Histogram_Plot();
+        layout->addWidget(plotWidget);
+
+        qDebug() << "Updating histogram plot";
+        plotWidget->updateHistogramPlot(
+            histogram,
+            "RR Intervals Histogram",
+            "Frequency",
+            "RR Interval [s]",
+            "Count"
+        );
+
+        // Show results
+        auto params = hrv2.getParams();
+        QString results = QString("HRV Results:\n")
+                         + QString("TINN: %1 ms\n").arg(params[4], 0, 'f', 2)
+                         + QString("Triangular Index: %1").arg(params[5], 0, 'f', 2);
+        QMessageBox::information(this, "HRV Parameters", results);
+
+    } catch (const std::exception& e) {
+        qDebug() << "Error in HRV2 histogram analysis:" << e.what();
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process HRV: %1").arg(e.what()));
+    }
+}
+
+void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams, 
+                                 const std::array<double, 6>& freqParams)
+{
+    // Prepare data for the table
+    QVector<QVector<QString>> tableData;
+    
+    // Headers
+    tableData.append({"Parameter", "Value", "Unit"});
+    
+    // Time domain parameters
+    tableData.append({"RR Mean", QString::number(timeParams[0], 'f', 2), "ms"});
+    tableData.append({"SDNN", QString::number(timeParams[1], 'f', 2), "ms"});
+    tableData.append({"RMSSD", QString::number(timeParams[2], 'f', 2), "ms"});
+    tableData.append({"NN50", QString::number(timeParams[3], 'f', 0), "count"});
+    tableData.append({"pNN50", QString::number(timeParams[4], 'f', 2), "%"});
+    
+    // Frequency domain parameters
+    tableData.append({"HF", QString::number(freqParams[0], 'f', 2), "ms²"});
+    tableData.append({"LF", QString::number(freqParams[1], 'f', 2), "ms²"});
+    tableData.append({"VLF", QString::number(freqParams[2], 'f', 2), "ms²"});
+    tableData.append({"ULF", QString::number(freqParams[3], 'f', 2), "ms²"});
+    tableData.append({"Total Power", QString::number(freqParams[4], 'f', 2), "ms²"});
+    tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'f', 2), "-"});
+
+    // Ensure frame_2 has a layout
+    QLayout* layout = ui->frame_2->layout();
+    if (!layout) {
+        layout = new QVBoxLayout(ui->frame_2);
+        ui->frame_2->setLayout(layout);
+    }
+
+    // Clear any existing widgets in the layout
+    QLayoutItem* child;
+    while ((child = layout->takeAt(0)) != nullptr) {
+        delete child->widget();
+        delete child;
+    }
+
+    // Create and set up the table
+    hrvTable = new Table(ui->frame_2);
+    layout->addWidget(hrvTable);
+    
+    hrvTable->setTitle("Heart Rate Variability Analysis Results");
+    hrvTable->setData(tableData);
+}
+
 void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
     switch (plotType) {
     case PLOT_TYPE::RAW_PLOT:{
@@ -163,7 +514,7 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
             return;
         }
         //
-        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+        plotWidget->updateBasicPlot(signal, highlights, "MLII Signal","Indeksy","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
         break;
     }
     default:
@@ -215,7 +566,7 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
                 Basic_Plot* plotWidget = new Basic_Plot();
                 layout->addWidget(plotWidget);
                 plotWidget->updateBasicPlot(filteredSignal, r_peak_positions,
-                    "Moving Mean Filtered ECG Signal with R-peaks", "ECG Signal (MLII)", 
+                    "Moving Mean Filtered ECG Signal", "RPeaks", "ECG Signal (MLII)", 
                     "Time [s]", "Voltage [mV]");
             }
         } catch (const std::exception& e) {
@@ -248,7 +599,7 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             layout->addWidget(plotWidget);
             QList<int> empty_highlights;
             plotWidget->updateBasicPlot(filteredSignal, empty_highlights,
-                "Moving Mean Filtered ECG Signal", "ECG Signal (MLII)", 
+                "Moving Mean Filtered ECG Signal", "Indeksy","ECG Signal (MLII)", 
                 "Time [s]", "Voltage [mV]");
         } catch (const std::exception& e) {
             qDebug() << "Error updating plot:" << e.what();
@@ -427,7 +778,7 @@ void MainWindow::on_btnFECG_clicked()
             Basic_Plot* filteredPlotWidget = new Basic_Plot();
             layout->addWidget(filteredPlotWidget);
             filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
-                "Moving Mean Filtered ECG Signal", "ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+                "Moving Mean Filtered ECG Signal", "QRS","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
             progress.setValue(100);
 
         } catch (const std::exception& e) {
