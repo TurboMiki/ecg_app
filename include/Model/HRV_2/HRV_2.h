@@ -1,16 +1,26 @@
 #pragma once
-#include "Signal.h"
 #include <array>
+#include "Signal.h"
 
 class HRV_2 {
 public:
+    HRV_2();
+
     void process(const Signal& rIds);
-    std::array<float, 4> getParams() const;
+    void generateHistogram(const std::vector<double>& intervals);
+    void calculateTiNN();
+    void calculateTriangularIndex(const std::vector<double>& intervals);
+    void generatePoincarePlot(const std::vector<double>& intervals);
+    void fitPoincareEllipse(const std::vector<double>& intervals);
+
+    std::array<double, 10> getParams() const;
     Signal getRHist() const;
-    Signal getPointCarePlot() const;
+    Signal getPoincarePlot() const;
+    Signal getPoincareEllipse() const;
 
 private:
-    std::array<float, 4> params_;
+    std::array<double, 10> params_;
     Signal rHist_;
-    Signal pointcarePlot_;
+    Signal poincarePlot_;
+    Signal poincareEllipse_;
 };
