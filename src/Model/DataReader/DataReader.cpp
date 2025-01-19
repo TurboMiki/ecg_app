@@ -51,14 +51,14 @@ void DataReader::load_time() {
     }
 }
 
-void DataReader::setPath(string filePath) {
+void DataReader::set_path(string filePath) {
     this->file_path = filePath;
     if(input_file.is_open()) {
         input_file.close();
     }
 }
 
-void DataReader::readFile() {
+void DataReader::read_file() {
     try {
         if(input_file.is_open()) {
             input_file.close();
