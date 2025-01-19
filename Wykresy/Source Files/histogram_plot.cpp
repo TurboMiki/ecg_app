@@ -1,19 +1,22 @@
 #include "histogram_plot.h"
 #include <QString>
 #include "qcustomplot.h"
+#include <QVBoxLayout>
 
 Histogram_Plot::Histogram_Plot(QWidget *parent)
     : QWidget(parent),
     customPlot(new QCustomPlot(this)),  // Inicjalizacja obiektu QCustomPlot
     bars(new QCPBars(customPlot->xAxis, customPlot->yAxis))  // Inicjalizacja wskaźnika na QCPBars
 {
-    customPlot->setGeometry(10, 10, 800, 600);  // Ustawienie rozmiaru wykresu w widgetzie
-
     // Ustawienie stylu dla wykresu słupkowego
     bars->setPen(QPen(Qt::black));  // Kolor obramowania słupków
     bars->setBrush(QBrush(Qt::blue));  // Kolor wypełnienia słupków
-    bars->setWidth(0.9);  // Zmniejszenie szerokości słupków, aby były bliżej siebie
+    bars->setWidth(0.009);  // Zmniejszenie szerokości słupków, aby były bliżej siebie
 
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(customPlot);
+    setLayout(layout);
 
     // Włączenie legendy
     customPlot->legend->setVisible(true);
