@@ -63,6 +63,8 @@ private slots:
     void on_pushButton_clicked();
 
     void createPlot(QLayout* layout,PLOT_TYPE plotType);
+    void on_showTable_stateChanged(int state);
+    void resizeLayout();
 
 private:
     Ui::MainWindow *ui;
@@ -83,6 +85,8 @@ private:
 
     RPeaks rPeaks;
     QList<int> r_peak_positions;
+    QWidget *tableWidget;
+    QWidget *currentPlotWidget;
     std::vector<int> qrs_onsets;
     std::vector<int> qrs_ends; 
 

@@ -2,7 +2,7 @@
 #define SCATTER_PLOT_H
 
 #include <QWidget>
-#include <QCustomPlot.h>
+#include "qcustomplot.h"
 #include <QString>
 #include "Signal.h"
 

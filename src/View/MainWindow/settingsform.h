@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include <QStringList>
+#include "baselineform.h"
+#include "rpeaksform.h"
 
 namespace Ui {
 class SettingsForm;
@@ -23,8 +25,12 @@ private slots:
     void on_btnSave_clicked();
     void on_btnCancel_clicked();
 
+    void on_ModuleComboBox_activated(int index);
+
 private:
     Ui::SettingsForm *ui;
+    BaselineForm *ptrBaselineForm;
+    RPeaksForm *ptrRPeaksForm;
 };
 
 #endif // SETTINGSFORM_H
