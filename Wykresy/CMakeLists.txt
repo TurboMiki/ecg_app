@@ -27,6 +27,7 @@ set(VISUALIZATION_HEADERS
     "Header Files/table.h"
     "Header Files/histogram_plot.h"
     "Header Files/waves_plot.h"
+    "Header Files/scatter_plot.h"
 )
 
 set(VISUALIZATION_SOURCES
@@ -35,6 +36,7 @@ set(VISUALIZATION_SOURCES
     "Source Files/table.cpp"
     "Source Files/histogram_plot.cpp"
     "Source Files/waves_plot.cpp"
+    "Source Files/scatter_plot.cpp"
 )
 
 # Create the library

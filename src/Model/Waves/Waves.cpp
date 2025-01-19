@@ -1,4 +1,4 @@
-#include "waves.h"
+#include "Waves.h"
 #include <algorithm>
 #include <numeric>
 #include <stdexcept>
