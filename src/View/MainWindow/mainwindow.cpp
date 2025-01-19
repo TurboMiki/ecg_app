@@ -177,7 +177,7 @@ void MainWindow::on_btnHRV_1_clicked()
         // Detect R-peaks if not already detected
         if (r_peak_positions.isEmpty()) {
             std::vector<int> peaks;
-            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            rPeaks.setParams("PAN_TOMPKINS", 0, 0);
             if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                 throw std::runtime_error("R-peaks detection failed");
             }
@@ -416,16 +416,17 @@ void MainWindow::on_btnHRV2_hist_clicked()
 
         // Update UI
         QLayout* layout = ui->frame_2->layout();
-        if (!layout) {
-            layout = new QVBoxLayout(ui->frame_2);
-            ui->frame_2->setLayout(layout);
-        }
+            if (!layout) {
+                layout = new QVBoxLayout(ui->frame_2);
+                ui->frame_2->setLayout(layout);
+            }
 
-        // Clear existing widgets
-        while (QLayoutItem* item = layout->takeAt(0)) {
-            delete item->widget();
-            delete item;
-        }
+        // Clear any existing widgets in the layout
+            QLayoutItem* child;
+            while ((child = layout->takeAt(0)) != nullptr) {
+                delete child->widget();
+                delete child;
+            }
 
         // Create and setup histogram plot
         Histogram_Plot* plotWidget = new Histogram_Plot();
@@ -604,7 +605,7 @@ void MainWindow::on_checkBoxRP_stateChanged(int state)
             
             // Detect R-peaks using Pan-Tompkins
             std::vector<int> peaks;
-            rPeaks.setParams("PAN_TOMPKINS", 3, 0.018);
+            rPeaks.setParams("PAN_TOMPKINS", 0, 0);
             // rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
             
             if (rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
@@ -690,7 +691,7 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
             // First detect R-peaks if not already detected
             if (r_peak_positions.isEmpty()) {
                 std::vector<int> peaks;
-                rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+                rPeaks.setParams("PAN_TOMPKINS", 0, 0);
                 if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
                     throw std::runtime_error("R-peaks detection failed");
                 }
