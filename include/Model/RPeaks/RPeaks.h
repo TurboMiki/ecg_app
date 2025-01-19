@@ -9,6 +9,28 @@
 /**
  * @class RPeaks
  * @brief A class for detecting R-peaks in ECG signals using various algorithms.
+ * 
+ * This class provides methods for detecting R-peaks in ECG signals using the
+ * Pan-Tompkins algorithm or the Hilbert transform method. It also allows for
+ * customizable parameters to adjust the detection process.
+ * 
+ * Parameters
+ * ----------
+ * - detection_method: The detection method to use ("PAN_TOMPKINS" or "HILBERT").
+ * - pan_tompkins_window_length: Window size for the Pan-Tompkins method.
+ * - pan_tompkins_threshold: Threshold for the Pan-Tompkins method.
+ * - hilbert_proximity: Minimum distance between R-peaks for the Hilbert method.
+ * - hilbert_threshold: Threshold for R-peak detection in the Hilbert method.
+ * - custom_parameters: Flag to check if custom parameters are set.
+ * 
+ * Methods
+ * -------
+ * - setParams: Configures parameters for the selected detection method.
+ * - detectRPeaks: Detects R-peaks in the input signal.
+ * - computeHilbert: Computes the Hilbert transform of a signal.
+ * - filterPeaks: Filters detected peaks based on proximity and prominence.
+ * - panTompkins: Implements the Pan-Tompkins algorithm for R-peak detection.
+ * - hilbertTransform: Implements the Hilbert transform for R-peak detection.
  */
 class RPeaks {
 public:
@@ -26,7 +48,6 @@ public:
      */
     void setParams(const std::string& method, int window_size = 0, double threshold = 0.0, int proximity = 0);
 
-
     /**
      * @brief Detects R-peaks in the input signal.
      * @param signal The input signal (e.g., ECG).
@@ -36,18 +57,15 @@ public:
      */
     bool detectRPeaks(const std::vector<double>& signal, double signal_frequency, std::vector<int>& r_peaks);
 
-
 private:
     // Detection parameters
     std::string detection_method;          ///< Detection method to use.
     int pan_tompkins_window_length;        ///< Window size for Pan-Tompkins method.
     double pan_tompkins_threshold;         ///< Threshold for Pan-Tompkins method.
     bool custom_parameters;                ///< Flag to check if custom parameters are set.
-    int hilbert_proximity; ///< Proximity dla Hilberta, ustawiany przez użytkownika lub domyślny
-    bool hilbert_custom_proximity; ///< Flaga sprawdzająca, czy proximity zostało ustawione
-    double hilbert_threshold;
-    bool hilbert_custom_threshold;
-    
+    int hilbert_proximity;                 ///< Proximity for Hilbert method, set by user or default.
+    double hilbert_threshold;              ///< Threshold for Hilbert method, set by user or default.
+
     // Hilbert transform helper functions
     /**
      * @brief Computes the Hilbert transform of the input signal.
