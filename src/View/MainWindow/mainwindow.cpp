@@ -454,6 +454,77 @@ void MainWindow::on_btnHRV2_hist_clicked()
     }
 }
 
+void MainWindow::on_btnHRV_DFA_clicked()
+{
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Show processing dialog
+        QProgressDialog progress("Processing DFA...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+
+        // Get the ECG signal
+        Signal inputSignal = fileReader.read_MLII();
+        progress.setValue(20);
+
+        // Filter the signal
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        progress.setValue(40);
+
+        // Detect R-peaks if not already detected
+        if (r_peak_positions.isEmpty()) {
+            std::vector<int> peaks;
+            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                throw std::runtime_error("R-peaks detection failed");
+            }
+            r_peak_positions.reserve(peaks.size());
+            for (const auto& peak : peaks) {
+                r_peak_positions.append(peak);
+            }
+        }
+        progress.setValue(60);
+
+        // Calculate RR intervals
+        std::vector<double> rr_intervals;
+        for (int i = 1; i < r_peak_positions.size(); ++i) {
+            double interval = (filteredSignal.getX()[r_peak_positions[i]] - 
+                             filteredSignal.getX()[r_peak_positions[i-1]]);
+            rr_intervals.push_back(interval);
+        }
+        
+        // Process DFA
+        HRV_DFA dfa;
+        dfa.process(rr_intervals);
+        progress.setValue(80);
+
+        // Log results
+        qDebug() << "DFA Results:";
+        qDebug() << "α1 (short-term):" << dfa.getA1();
+        qDebug() << "α2 (long-term):" << dfa.getA2();
+
+        progress.setValue(100);
+
+        // Show success message
+        QMessageBox::information(this, "Success", 
+            QString("DFA Analysis completed successfully.\nα1: %1\nα2: %2")
+                .arg(dfa.getA1())
+                .arg(dfa.getA2()));
+
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process DFA: %1").arg(e.what()));
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred while processing DFA.");
+    }
+}
+
 void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams, 
                                  const std::array<double, 6>& freqParams)
 {
