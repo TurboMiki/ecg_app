@@ -10,6 +10,7 @@
 #include "Waves.h"
 #include "HRV_1.h"
 #include "HRV_2.h"
+#include "HRV_DFA.h"
 
 #include "settingsform.h"
 
@@ -49,9 +50,9 @@ private slots:
     void on_btnRaw_clicked();
     void on_btnFECG_clicked();
     void on_btnHRV_1_clicked();
-
     void on_btnHRV2_PC_clicked();
     void on_btnHRV2_hist_clicked();
+    void on_btnHRV_DFA_clicked();
 
     void displayHRVResults(const std::array<double, 5>& timeParams, 
                          const std::array<double, 6>& freqParams);
