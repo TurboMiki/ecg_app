@@ -94,8 +94,8 @@ void MainWindow::on_btnPath_clicked()
         this->filePath = selectedFile;
         ui->linePath->setText(this->filePath);
     }
-    fileReader.setPath(ui->linePath->text().toStdString());
-    fileReader.readFile();
+    fileReader.set_path(ui->linePath->text().toStdString());
+    fileReader.read_file();
     fileReader.write_measured_time(); 
 }
 
