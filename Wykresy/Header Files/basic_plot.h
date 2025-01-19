@@ -8,16 +8,16 @@
 
 class Basic_Plot : public QWidget
 {
-    Q_OBJECT  // This is essential!
+    Q_OBJECT
 
 public:
     explicit Basic_Plot(QWidget *parent = nullptr);
     virtual ~Basic_Plot();
 
     void setTitle(const QString& title);
-    void updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices, 
-                        const QString& legend, const QString& title,
-                        const QString& xtitle, const QString& ytitle);
+    void updateBasicPlot(const Signal& signal, const QVector<int>& highlightIndices,
+                         const QString& legend,const QString& indexlegend ,const QString& title,
+                         const QString& xtitle, const QString& ytitle);
 
     QCustomPlot* getCustomPlot() const { return customPlot; }
 
