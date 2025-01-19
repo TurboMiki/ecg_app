@@ -216,8 +216,6 @@ void MainWindow::createPlot(QLayout* layout, PLOT_TYPE plotType)
     resizeLayout();
 }
 
-
-
 void MainWindow::on_checkBoxRP_stateChanged(int state)
 {
     if (state == Qt::Checked) {
@@ -407,8 +405,6 @@ void MainWindow::on_btnFECG_clicked()
                               "An unknown error occurred while processing the data.");
     }
 }
-
-
 
 void MainWindow::on_showTable_stateChanged(int state)
 {

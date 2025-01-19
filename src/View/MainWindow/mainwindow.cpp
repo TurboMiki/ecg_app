@@ -525,8 +525,7 @@ void MainWindow::on_btnHRV_DFA_clicked()
     }
 }
 
-void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams, 
-                                 const std::array<double, 6>& freqParams)
+void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams,const std::array<double, 6>& freqParams)
 {
     // Prepare data for the table
     QVector<QVector<QString>> tableData;
