@@ -6,7 +6,7 @@
 #include <numeric>
 #include <cmath>
 
-/* Constants for readability */
+// Zmienne dla czytelności
 const int R_S_INTERVAL = 60;
 const int NUM_OF_INTERVALS = 10;
 const int STD_THRESHOLD = 10;
@@ -14,11 +14,12 @@ const int QRS_MIN = 50;
 const int QRS_MAX = 180;
 const int QRS_WIDE_THRESHOLD = 120;
 
+// Funkcja pomocnicza do konwersji próbek na milisekundy
 int SamplesToMilliseconds(int value, unsigned int fs) {
     return value * 1000 / fs;
 }
 
-enum typeOfActivation HeartActivationClassifier::CheckAVDissociation(const std::vector<int>& P, int currR, const std::vector<int>& QRSonset) {
+enum typeOfActivation HeartClass::CheckAVDissociation(const std::vector<int>& P, int currR, const std::vector<int>& QRSonset) {
     std::vector<int> intervals;
     auto itQRS = std::upper_bound(QRSonset.begin(), QRSonset.end(), currR);
     auto itP = std::upper_bound(P.begin(), P.end(), currR);
@@ -38,7 +39,7 @@ enum typeOfActivation HeartActivationClassifier::CheckAVDissociation(const std::
     return (stdDev < STD_THRESHOLD) ? DIFF_DISEASE : VENTRICULAR;
 }
 
-void HeartActivationClassifier::ClassifyType(const std::vector<int>& rPeaks, const std::vector<int>& P, const std::vector<int>& QRSend, const std::vector<int>& QRSonset, int fs) {
+void HeartClass::process(const std::vector<int>& rPeaks, const std::vector<int>& P, const std::vector<int>& QRSend, const std::vector<int>& QRSonset, int fs) {
     activations_t nextClassification;
 
     for (const auto& r : rPeaks) {
@@ -77,4 +78,8 @@ void HeartActivationClassifier::ClassifyType(const std::vector<int>& rPeaks, con
             activations.push_back(nextClassification);
         }
     }
+}
+
+const std::vector<activations_t>& HeartClass::getActivations() const {
+    return activations;
 }
