@@ -591,6 +591,14 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
         plotWidget->updateBasicPlot(signal, highlights, "MLII Signal","Indeksy","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
         break;
     }
+    case PLOT_TYPE::FILTERED_PLOT:{
+        Basic_Plot* filteredPlotWidget = new Basic_Plot();
+        QList<int> highlights = r_peak_positions;
+        Signal filteredSignal = baseline.getSignal();
+        layout->addWidget(filteredPlotWidget);
+        filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
+                                            "Moving Mean Filtered ECG Signal", "QRS","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+    }
     default:
         break;
     }

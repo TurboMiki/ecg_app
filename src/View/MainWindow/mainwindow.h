@@ -21,7 +21,18 @@
 
 
 enum class PLOT_TYPE{
-    RAW_PLOT
+    RAW_PLOT,
+    FILTERED_PLOT,
+    TABLE,
+    NO_PLOT
+};
+
+enum class PLOT_FLAGS{
+    FILTER_MM,
+    FILTER_SG,
+    FILTER_BUTTER,
+    FILTER_LMS,
+    FLAG_NONE
 };
 
 QT_BEGIN_NAMESPACE
@@ -80,6 +91,7 @@ private:
 
     DataReader fileReader;
     PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
+    PLOT_FLAGS currentFlag = PLOT_FLAGS::FLAG_NONE;
 
     Baseline baseline;
 
