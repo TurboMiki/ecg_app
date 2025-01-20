@@ -22,6 +22,14 @@
 #include <QProgressDialog>
 #include <QElapsedTimer>
 
+void clearLayout(QLayout* layout){
+    QLayoutItem* child;
+    while ((child = layout->takeAt(0)) != nullptr) {
+        delete child->widget();
+        delete child;
+    }
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -55,6 +63,89 @@ MainWindow::~MainWindow()
 void MainWindow::on_START_clicked()
 {
     // Implementation for START button
+    if (isFileSelected){
+        //Set progress bar
+        QProgressDialog progress("Processing HRV...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+
+        // Rpeaks
+        std::vector<int> peaks;
+        Signal filtered = baseline.getSignal();
+        rPeaks.setParams("PAN_TOMPKINS", 0, 0);
+        // rPeaks.setParams("HILBERT", 200, 1.5, static_cast<int>(0.8 * inputSignal.getSamplingRate()));
+
+        if (rPeaks.detectRPeaks(filtered.getY(), filtered.getSamplingRate(), peaks)) {
+
+            // Convert peaks to QList whyyyyyyyyyyyyyyyy
+            r_peak_positions.clear();
+            r_peak_positions.reserve(peaks.size());
+            for (const auto& peak : peaks) {
+                r_peak_positions.append(peak);
+            }
+        }
+        progress.setValue(10);
+
+        // Waves
+        waveDetector.setRPeaks(r_peak_positions);
+        if (!waveDetector.detectWaves(filtered)) {
+            throw std::runtime_error("Wave detection failed");
+        }
+        progress.setValue(20);
+
+        // HRV_1
+        // whyyyyyyyyyyyyyyyyy
+        std::vector<double> peakTimes;
+        for (int idx : r_peak_positions) {
+            peakTimes.push_back(filtered.getX()[idx]);
+        }
+
+        Signal rPeaksSignal(peakTimes, std::vector<double>(peakTimes.size(), 1.0),
+                            filtered.getSamplingRate());
+
+        HRV_1 hrvAnalyzer(rPeaksSignal, filtered);
+        hrvAnalyzer.process();
+
+        // Get results and display them
+        timeParams = hrvAnalyzer.getTimeParams();
+        freqParams = hrvAnalyzer.getFreqParams();
+        displayHRVResults(timeParams, freqParams);
+        progress.setValue(40);
+
+        // HRV_2
+        // std::vector<double> peakTimes;
+        // for (int idx : peaks) {
+        //     if (idx >= 0 && idx < filtered.getX().size()) {
+        //         // Convert to seconds
+        //         peakTimes.push_back(idx / static_cast<double>(filtered.getSamplingRate()));
+        //     }
+        // }
+        hrv2.process(rPeaksSignal);
+        progress.setValue(60);
+
+        // HRV_DFA
+
+        std::vector<double> rr_intervals;
+        for (int i = 1; i < r_peak_positions.size(); ++i) {
+            double interval = (filtered.getX()[r_peak_positions[i]] -
+                               filtered.getX()[r_peak_positions[i-1]]);
+            rr_intervals.push_back(interval);
+        }
+
+        dfa.process(rr_intervals);
+        progress.setValue(100);
+        isSignalAnalyzed = true;
+
+        // HearthClass
+    }else {
+        if (ui->linePath->text().isEmpty()) {
+            QMessageBox::warning(this, "Warning", "Please select a file first!");
+            return;
+        }else {
+            QMessageBox::warning(this, "Warning", "Error while loading file!");
+        }
+    }
 }
 
 void MainWindow::on_Config_clicked()
@@ -95,10 +186,23 @@ void MainWindow::on_btnPath_clicked()
     {
         this->filePath = selectedFile;
         ui->linePath->setText(this->filePath);
+        fileReader.set_path(ui->linePath->text().toStdString());
+        fileReader.read_file();
+        fileReader.write_measured_time();
+
+        auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
+        movingMeanFilter->set(3);  // window length of 15 points
+
+        baseline.setFilter(std::move(movingMeanFilter));
+        baseline.filterSignal(fileReader.read_MLII());
+        isFileSelected = true;
+        isSignalAnalyzed = false;
+
+        // Ensure frame_2 has a layout
+        QLayout* layout = ui->frame_2->layout();
+        // Create and add plot
+        createPlot(layout,PLOT_TYPE::RAW_PLOT);
     }
-    fileReader.set_path(ui->linePath->text().toStdString());
-    fileReader.read_file();
-    fileReader.write_measured_time(); 
 }
 
 void MainWindow::on_btnRaw_clicked()
@@ -110,29 +214,10 @@ void MainWindow::on_btnRaw_clicked()
     ui->showTable->setDisabled(true);
 
     try {
-        // Get the input signal from file reader
-        Signal inputSignal = fileReader.read_MLII();
-        
         // Ensure frame_2 has a layout
         QLayout* layout = ui->frame_2->layout();
-        if (!layout) {
-            layout = new QVBoxLayout(ui->frame_2);
-            ui->frame_2->setLayout(layout);
-        }
-
-        // Clear any existing widgets in the layout
-        QLayoutItem* child;
-        while ((child = layout->takeAt(0)) != nullptr) {
-            delete child->widget();
-            delete child;
-        }
-
         // Create and add plot
-        Basic_Plot* plotWidget = new Basic_Plot();
-        layout->addWidget(plotWidget);
-        QVector<int> highlights;
-        plotWidget->updateBasicPlot(inputSignal, highlights, 
-            "Raw ECG Signal", "Hajlajts","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+        createPlot(layout,PLOT_TYPE::RAW_PLOT);
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
@@ -575,6 +660,13 @@ void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams,const
 }
 
 void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
+    if (!layout) {
+        layout = new QVBoxLayout(ui->frame_2);
+        ui->frame_2->setLayout(layout);
+    }
+
+    // Clear any existing widgets in the layout
+    clearLayout(layout);
     switch (plotType) {
     case PLOT_TYPE::RAW_PLOT:{
         Basic_Plot* plotWidget = new Basic_Plot();
@@ -1068,3 +1160,5 @@ void MainWindow::on_btnHeartClass_clicked()
             "An unknown error occurred while processing heart classification.");
     }
 }
+
+

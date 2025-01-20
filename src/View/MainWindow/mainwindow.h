@@ -82,7 +82,9 @@ private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;
     Basic_Plot *plotWidget;
-    
+    bool isFileSelected = false;
+    bool isSignalAnalyzed = false;
+
     QString parameter1;
     QString parameter2;
     QString parameter3;
@@ -90,24 +92,26 @@ private:
     QString parameter5;
     QString filePath;
 
-    DataReader fileReader;
     PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
     PLOT_FLAGS currentFlag = PLOT_FLAGS::FLAG_NONE;
 
+    DataReader fileReader;
     Baseline baseline;
-
     RPeaks rPeaks;
+    HRV_2 hrv2;
+    HeartClass heartClassifier;
+    Waves waveDetector;
+    HRV_DFA dfa;
+
+    std::array<double,5> timeParams;
+    std::array<double,6> freqParams;
+
     QList<int> r_peak_positions;
     QWidget *tableWidget;
     QWidget *currentPlotWidget;
     std::vector<int> qrs_onsets;
     std::vector<int> qrs_ends; 
-
     Table* hrvTable;
-
-    HRV_2 hrv2;
-
-    HeartClass heartClassifier;
 };
 
 #endif // MAINWINDOW_H
