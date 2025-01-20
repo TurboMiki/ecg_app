@@ -28,8 +28,8 @@ void SettingsForm::on_btnSave_clicked()
     data << parameter1 << parameter2 << parameter3 << parameter4 << parameter5;
 
     emit pass_values(data); // Emitowanie sygnału z danymi
-    this->close();
     */
+    this->close();
 }
 
 void SettingsForm::on_btnCancel_clicked()
