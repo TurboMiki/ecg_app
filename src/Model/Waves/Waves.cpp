@@ -110,8 +110,8 @@ bool Waves::detectPWave() {
         int pPeakIdx = searchStart + std::distance(segment.begin(), pPeak);
         
         // P wave onset
-        searchStart = std::max(0, pPeakIdx - static_cast<int>(0.06 * fs));
-        std::vector<double> onsetSegment(y.begin() + searchStart, y.begin() + pPeakIdx);
+        searchStart = std::max(0, pPeakIdx - static_cast<int>(0.05 * fs));
+        std::vector<double> onsetSegment(y.begin() + searchStart, y.begin() + pPeakIdx - static_cast<int>(0.03 * fs)); //zeby uniknac wachan kolo piku
         std::vector<double> gradients(onsetSegment.size() - 1);
         
         for (size_t i = 0; i < gradients.size(); ++i) {
@@ -125,7 +125,7 @@ bool Waves::detectPWave() {
         }
         
         // P wave end
-        searchStart = pPeakIdx;
+        searchStart = pPeakIdx + static_cast<int>(0.03 * fs); //zeby uniknac wachan kolo piku
         int searchEnd = std::min(static_cast<int>(y.size()), pPeakIdx + static_cast<int>(0.06 * fs));
         std::vector<double> endSegment(y.begin() + searchStart, y.begin() + searchEnd);
         gradients.resize(endSegment.size() - 1);
@@ -149,7 +149,7 @@ bool Waves::detectPWave() {
 }
 
 bool Waves::detectTWave() {
-    if (qrsEnds.isEmpty()) {
+    if (pOnsets.isEmpty()) {
         return false;
     }
 
@@ -157,37 +157,46 @@ bool Waves::detectTWave() {
     int fs = signal.getSamplingRate();
     
     std::vector<int> ends;
-    
-    for (int qrsEnd : qrsEnds) {
-        int searchStart = std::min(static_cast<int>(y.size()) - 1, 
-                                 qrsEnd + static_cast<int>(0.08 * fs));  // 80ms after QRS
-        int searchEnd = std::min(static_cast<int>(y.size()),
-                               qrsEnd + static_cast<int>(0.36 * fs));   // 360ms after QRS
-        
-        if (searchStart >= searchEnd) continue;
-        
+    int windowSize = 10;  // Liczba punktów do analizy wzrostu
+
+    for (int pOnset : pOnsets) {
+        // Okno przeszukiwania: od P-onset do P-onset - 0.05 * fs (50 ms przed P-onset)
+        int searchStart = std::max(0, pOnset - static_cast<int>(0.05 * fs));  // 50 ms przed P-onset
+        int searchEnd = pOnset;  // Do samego P-onset
+
+        if (searchStart >= searchEnd || searchEnd - searchStart < windowSize) continue;
+
+        // Segment do analizy
         std::vector<double> segment(y.begin() + searchStart, y.begin() + searchEnd);
-        std::vector<double> gradients(segment.size() - 1);
-        
-        for (size_t i = 0; i < gradients.size(); ++i) {
-            gradients[i] = segment[i + 1] - segment[i];
-        }
-        
-        double maxGradient = *std::max_element(gradients.begin(), gradients.end(),
-            [](double a, double b) { return std::abs(a) < std::abs(b); });
-        double threshold = std::max(0.1 * std::abs(maxGradient), percentileAbs(gradients, 10));
-        
-        for (size_t i = 0; i < gradients.size() - 1; ++i) {
-            if (std::abs(gradients[i]) < threshold && gradients[i] * gradients[i + 1] < 0) {
-                ends.push_back(searchStart + i);
-                break;
+
+        // Szukamy największego wzrostu w określonej liczbie punktów (windowSize)
+        int maxDiffIdx = -1;
+        double maxDiffSum = -std::numeric_limits<double>::infinity();
+
+        for (size_t i = windowSize - 1; i < segment.size(); ++i) { 
+            double diffSum = 0.0;
+            
+            // Oblicz sumę różnic dla bieżącego okna o długości `windowSize`
+            for (size_t j = 0; j < windowSize - 1; ++j) {
+                diffSum += segment[i - j] - segment[i - j - 1];
+            }
+
+            if (diffSum > maxDiffSum) {
+                maxDiffSum = diffSum;
+                maxDiffIdx = i;
             }
         }
+
+        // Jeśli znaleziono największy wzrost amplitudy
+        if (maxDiffIdx >= windowSize - 1) {
+            // T-fala to punkt przed początkiem największego wzrostu
+            ends.push_back(searchStart + maxDiffIdx - (windowSize - 1));
+        }
     }
-    
+
     // Convert to QVector
     tEnds = QVector<int>(ends.begin(), ends.end());
-    
+
     return true;
 }
 

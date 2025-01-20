@@ -62,7 +62,7 @@ void Scatter_Plot::updateScatterPlot(const Signal& signal, double x_elipse, doub
     QVector<double> ellipseX, ellipseY;
     int points = 200;  // Ilość punktów elipsy
 
-    double angleMinus45 = -M_PI / 4.0;  // -45 stopni w radianach
+    double angleMinus45 = M_PI / 4.0;  // -45 stopni w radianach
     for (int i = 0; i <= points; ++i) {
         double t = 2 * M_PI * i / points;  // Parametr kąta
 

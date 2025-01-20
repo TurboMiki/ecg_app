@@ -22,7 +22,18 @@
 
 
 enum class PLOT_TYPE{
-    RAW_PLOT
+    RAW_PLOT,
+    FILTERED_PLOT,
+    TABLE,
+    NO_PLOT
+};
+
+enum class PLOT_FLAGS{
+    FILTER_MM,
+    FILTER_SG,
+    FILTER_BUTTER,
+    FILTER_LMS,
+    FLAG_NONE
 };
 
 QT_BEGIN_NAMESPACE
@@ -64,6 +75,8 @@ private slots:
     void on_pushButton_clicked();
 
     void createPlot(QLayout* layout,PLOT_TYPE plotType);
+    void on_showTable_stateChanged(int state);
+    void resizeLayout();
 
 private:
     Ui::MainWindow *ui;
@@ -79,11 +92,14 @@ private:
 
     DataReader fileReader;
     PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
+    PLOT_FLAGS currentFlag = PLOT_FLAGS::FLAG_NONE;
 
     Baseline baseline;
 
     RPeaks rPeaks;
     QList<int> r_peak_positions;
+    QWidget *tableWidget;
+    QWidget *currentPlotWidget;
     std::vector<int> qrs_onsets;
     std::vector<int> qrs_ends; 
 
