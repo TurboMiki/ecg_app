@@ -525,8 +525,7 @@ void MainWindow::on_btnHRV_DFA_clicked()
     }
 }
 
-void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams, 
-                                 const std::array<double, 6>& freqParams)
+void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams, const std::array<double, 6>& freqParams)
 {
     // Prepare data for the table
     QVector<QVector<QString>> tableData;
@@ -866,3 +865,86 @@ void MainWindow::on_btnFECG_clicked()
             "An unknown error occurred while processing the data.");
     }
 }
+
+void MainWindow::on_btnHeartClass_clicked()
+{
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Show processing dialog
+        QProgressDialog progress("Processing heart classification...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+
+        // Get and process the signal
+        Signal inputSignal = fileReader.read_MLII();
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        progress.setValue(20);
+
+        // Detect R-peaks if not already detected
+        std::vector<int> peaks;
+        if (r_peak_positions.isEmpty()) {
+            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                throw std::runtime_error("R-peaks detection failed");
+            }
+            r_peak_positions.reserve(peaks.size());
+            for (const auto& peak : peaks) {
+                r_peak_positions.append(peak);
+            }
+        } else {
+            // Convert QList to vector
+            peaks.reserve(r_peak_positions.size());
+            for (const auto& peak : r_peak_positions) {
+                peaks.push_back(peak);
+            }
+        }
+        progress.setValue(40);
+
+        // Detect waves if needed
+        Waves waveDetector(filteredSignal, r_peak_positions);
+        if (!waveDetector.detectWaves()) {
+            throw std::runtime_error("Wave detection failed");
+        }
+        progress.setValue(60);
+
+        // Get wave points and convert QVector to std::vector
+        QVector<int> qrsEndsQV = waveDetector.getQRSEnds();
+        QVector<int> qrsOnsetsQV = waveDetector.getQRSOnsets();
+        QVector<int> pEndsQV = waveDetector.getPEnds();
+
+        // Convert to std::vector
+        std::vector<int> qrsEndsVec(qrsEndsQV.begin(), qrsEndsQV.end());
+        std::vector<int> qrsOnsetsVec(qrsOnsetsQV.begin(), qrsOnsetsQV.end());
+        std::vector<int> pEndsVec(pEndsQV.begin(), pEndsQV.end());
+        
+        // Process heart classification
+        heartClassifier.process(peaks, 
+                              pEndsVec,  // Using P-ends for P-wave points
+                              qrsEndsVec,
+                              qrsOnsetsVec,
+                              inputSignal.getSamplingRate());
+        progress.setValue(80);
+
+        // Get results
+        const auto& activations = heartClassifier.getActivations();
+
+        // Show results in message box
+        QString resultMessage = QString("Heart Classification Results:\nTotal activations detected: %1").arg(activations.size());
+        
+        progress.setValue(100);
+        QMessageBox::information(this, "Heart Classification", resultMessage);
+
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process heart classification: %1").arg(e.what()));
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred while processing heart classification.");
+    }
+}
+

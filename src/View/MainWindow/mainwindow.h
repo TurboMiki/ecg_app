@@ -11,6 +11,7 @@
 #include "HRV_1.h"
 #include "HRV_2.h"
 #include "HRV_DFA.h"
+#include "HeartClass.h"
 
 #include "settingsform.h"
 
@@ -53,9 +54,9 @@ private slots:
     void on_btnHRV2_PC_clicked();
     void on_btnHRV2_hist_clicked();
     void on_btnHRV_DFA_clicked();
+    void on_btnHeartClass_clicked();
 
-    void displayHRVResults(const std::array<double, 5>& timeParams, 
-                         const std::array<double, 6>& freqParams);
+    void displayHRVResults(const std::array<double, 5>& timeParams, const std::array<double, 6>& freqParams);
 
     void on_checkBoxRP_stateChanged(int state);
     void on_checkBoxQRS_stateChanged(int state);
@@ -90,6 +91,7 @@ private:
 
     HRV_2 hrv2;
 
+    HeartClass heartClassifier;
 };
 
 #endif // MAINWINDOW_H
