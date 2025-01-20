@@ -962,6 +962,16 @@
       </property>
      </spacer>
     </item>
+    <item row="3" column="2">
+     <widget class="QCheckBox" name="showTable">
+      <property name="text">
+       <string>Show Table</string>
+      </property>
+      <property name="tristate">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
  </widget>

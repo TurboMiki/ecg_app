@@ -6,6 +6,7 @@
 #include "waves_plot.h"
 #include "scatter_plot.h"
 #include "histogram_plot.h"
+#include "table.h"
 
 #include "MovingMeanFilter.h"
 #include "ButterworthFilter.h"
@@ -39,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect signals and slots
     connect(ptrSettingsForm, &SettingsForm::pass_values, this, &MainWindow::get_settings);
     connect(this, &MainWindow::requestData, ptrSettingsForm, &SettingsForm::pass_values);
+    connect(ui->showTable, &QCheckBox::stateChanged, this, &MainWindow::on_showTable_stateChanged);
 }
 
 MainWindow::~MainWindow()
@@ -105,6 +107,7 @@ void MainWindow::on_btnRaw_clicked()
         QMessageBox::warning(this, "Warning", "Please select a file first!");
         return;
     }
+    ui->showTable->setDisabled(true);
 
     try {
         // Get the input signal from file reader
@@ -588,6 +591,14 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
         plotWidget->updateBasicPlot(signal, highlights, "MLII Signal","Indeksy","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
         break;
     }
+    case PLOT_TYPE::FILTERED_PLOT:{
+        Basic_Plot* filteredPlotWidget = new Basic_Plot();
+        QList<int> highlights = r_peak_positions;
+        Signal filteredSignal = baseline.getSignal();
+        layout->addWidget(filteredPlotWidget);
+        filteredPlotWidget->updateBasicPlot(filteredSignal, highlights,
+                                            "Moving Mean Filtered ECG Signal", "QRS","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+    }
     default:
         break;
     }
@@ -864,5 +875,196 @@ void MainWindow::on_btnFECG_clicked()
     } catch (...) {
         QMessageBox::critical(this, "Error", 
             "An unknown error occurred while processing the data.");
+    }
+}void MainWindow::on_showTable_stateChanged(int state)
+{
+    for(int i=0;i<2;i++) {
+        // Pobierz układ przypisany do frame_2
+        QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->frame_2->layout());
+        if (!layout) {
+            layout = new QVBoxLayout(ui->frame_2);
+            ui->frame_2->setLayout(layout);
+        }
+
+        // Jeśli checkbox jest zaznaczony
+        if (state == Qt::Checked) {
+            ui->pushButton->setDisabled(true);
+            if (!tableWidget) {
+                // Tworzenie nowej tabeli, jeśli jeszcze nie istnieje
+                tableWidget = new Table(this);
+                //tableWidget->setMinimumWidth(200);
+                //tableWidget->setMinimumHeight(0);
+                //tableWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+                //tableWidget->setTitle("ECG Signal Data");
+
+                // Przykładowe dane dla tabeli
+                QVector<QVector<QString>> tableData;
+                Signal signal = fileReader.read_MLII();
+                for (int i = 0; i < signal.getY().size(); ++i) {
+                    QVector<QString> row;
+                    row.append(QString::number(signal.getX()[i]));  // Czas
+                    row.append(QString::number(signal.getY()[i]));  // Napięcie
+                    tableData.append(row);
+                }
+
+                // Ustaw dane w tabeli
+                qobject_cast<Table*>(tableWidget)->setData(tableData);
+            }
+
+            // Dodaj tabelę do układu, jeśli jej nie ma
+
+            layout->addWidget(tableWidget);
+
+            // Dostosuj proporcje: wykres (1 część), tabela (1 część)
+            if (currentPlotWidget) {
+                //currentPlotWidget->setVisible(true);
+            }
+            //layout->setStretch(0, 1); // Wykres
+            //layout->setStretch(1, 1); // Tabela
+            tableWidget->show();
+
+            // Jeśli checkbox jest odznaczony
+            // Ukryj tabelę
+            if(i<1){
+                if (tableWidget) {
+                    layout->removeWidget(tableWidget);
+                    tableWidget->hide();
+                    ui->pushButton->setDisabled(false);
+                    //delete tableWidget;
+                }
+
+                // Dostosuj proporcje: wykres zajmuje całą wysokość
+                if (currentPlotWidget) {
+                    currentPlotWidget->setVisible(true);
+                }
+                layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
+                resizeLayout();
+            }
+        } else {  // Jeśli checkbox jest odznaczony
+            // Ukryj tabelę, i usuń ją
+            if (tableWidget) {
+                layout->removeWidget(tableWidget);
+                tableWidget->hide();
+                ui->pushButton->setDisabled(false);
+                //delete tableWidget;
+            }
+
+            // Dostosuj proporcje: wykres zajmuje całą wysokość
+            if (currentPlotWidget) {
+                currentPlotWidget->setVisible(true);
+            }
+            layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
+        }
+
+        // Dostosuj geometrię układu
+        resizeLayout();
+    }
+}
+
+void MainWindow::resizeLayout()
+{
+    QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->frame_2->layout());
+    if (!layout) return;
+
+    // Pobierz geometrię całego układu
+    QRect frameGeometry = ui->frame_2->geometry();
+
+    // Oblicz wymiary dla każdego widgetu
+    int totalHeight = frameGeometry.height();
+    int plotHeight = ui->showTable->isChecked() ? totalHeight / 2 : totalHeight; // Wykres zajmuje całą wysokość, jeśli tabela jest ukryta
+    int tableHeight = ui->showTable->isChecked() ? totalHeight / 2 : 0;         // Tabela zajmuje połowę, jeśli checkbox jest zaznaczony
+
+    // Przypisz nowe wymiary do widgetów
+    if (currentPlotWidget) {
+        QRect plotGeometry = QRect(frameGeometry.x(), frameGeometry.y(), frameGeometry.width(), plotHeight);
+        currentPlotWidget->setGeometry(plotGeometry);
+    }
+
+    if (tableWidget && ui->showTable->isChecked()) {
+        QRect tableGeometry = QRect(frameGeometry.x(), frameGeometry.y() + plotHeight, frameGeometry.width(), tableHeight);
+        tableWidget->setGeometry(tableGeometry);
+    }
+}
+
+void MainWindow::on_btnHeartClass_clicked()
+{
+    if (ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    try {
+        // Show processing dialog
+        QProgressDialog progress("Processing heart classification...", "Cancel", 0, 100, this);
+        progress.setWindowModality(Qt::WindowModal);
+        progress.setMinimumDuration(0);
+        progress.setValue(0);
+
+        // Get and process the signal
+        Signal inputSignal = fileReader.read_MLII();
+        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        progress.setValue(20);
+
+        // Detect R-peaks if not already detected
+        std::vector<int> peaks;
+        if (r_peak_positions.isEmpty()) {
+            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
+            if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
+                throw std::runtime_error("R-peaks detection failed");
+            }
+            r_peak_positions.reserve(peaks.size());
+            for (const auto& peak : peaks) {
+                r_peak_positions.append(peak);
+            }
+        } else {
+            // Convert QList to vector
+            peaks.reserve(r_peak_positions.size());
+            for (const auto& peak : r_peak_positions) {
+                peaks.push_back(peak);
+            }
+        }
+        progress.setValue(40);
+
+        // Detect waves if needed
+        Waves waveDetector(filteredSignal, r_peak_positions);
+        if (!waveDetector.detectWaves()) {
+            throw std::runtime_error("Wave detection failed");
+        }
+        progress.setValue(60);
+
+        // Get wave points and convert QVector to std::vector
+        QVector<int> qrsEndsQV = waveDetector.getQRSEnds();
+        QVector<int> qrsOnsetsQV = waveDetector.getQRSOnsets();
+        QVector<int> pEndsQV = waveDetector.getPEnds();
+
+        // Convert to std::vector
+        std::vector<int> qrsEndsVec(qrsEndsQV.begin(), qrsEndsQV.end());
+        std::vector<int> qrsOnsetsVec(qrsOnsetsQV.begin(), qrsOnsetsQV.end());
+        std::vector<int> pEndsVec(pEndsQV.begin(), pEndsQV.end());
+        
+        // Process heart classification
+        heartClassifier.process(peaks, 
+                              pEndsVec,  // Using P-ends for P-wave points
+                              qrsEndsVec,
+                              qrsOnsetsVec,
+                              inputSignal.getSamplingRate());
+        progress.setValue(80);
+
+        // Get results
+        const auto& activations = heartClassifier.getActivations();
+
+        // Show results in message box
+        QString resultMessage = QString("Heart Classification Results:\nTotal activations detected: %1")
+                                .arg(activations.size());
+        
+        progress.setValue(100);
+        QMessageBox::information(this, "Heart Classification", resultMessage);
+
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", 
+            QString("Failed to process heart classification: %1").arg(e.what()));
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred while processing heart classification.");
     }
 }

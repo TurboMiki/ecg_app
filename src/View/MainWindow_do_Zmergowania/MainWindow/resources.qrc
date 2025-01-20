@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/icons">
-    <file>icons/play.png</file>
-    <file>icons/gear.png</file>
-  </qresource>
-</RCC>

@@ -23,8 +23,8 @@ void BaselineForm::on_LMS_RF_ToolButton_clicked()
         this->filePath = selectedFile;
         ui->LMS_RF_FilePath->setText(this->filePath);
     }
-    fileReader.setPath(ui->LMS_RF_FilePath->text().toStdString());
-    fileReader.readFile();
+    fileReader.set_path(ui->LMS_RF_FilePath->text().toStdString());
+    fileReader.read_file();
     fileReader.write_measured_time();
 }
 
