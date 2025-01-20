@@ -538,19 +538,19 @@ void MainWindow::displayHRVResults(const std::array<double, 5>& timeParams,const
     tableData.append({"Parameter", "Value", "Unit"});
     
     // Time domain parameters
-    tableData.append({"RR Mean", QString::number(timeParams[0], 'f', 2), "ms"});
-    tableData.append({"SDNN", QString::number(timeParams[1], 'f', 2), "ms"});
-    tableData.append({"RMSSD", QString::number(timeParams[2], 'f', 2), "ms"});
-    tableData.append({"NN50", QString::number(timeParams[3], 'f', 0), "count"});
-    tableData.append({"pNN50", QString::number(timeParams[4], 'f', 2), "%"});
+    tableData.append({"RR Mean", QString::number(timeParams[0], 'e', 2), "ms"});
+    tableData.append({"SDNN", QString::number(timeParams[1], 'e', 2), "ms"});
+    tableData.append({"RMSSD", QString::number(timeParams[2], 'e', 2), "ms"});
+    tableData.append({"NN50", QString::number(timeParams[3], 'e', 2), "count"});
+    tableData.append({"pNN50", QString::number(timeParams[4], 'e', 2), "%"});
     
     // Frequency domain parameters
-    tableData.append({"HF", QString::number(freqParams[0], 'f', 2), "ms²"});
-    tableData.append({"LF", QString::number(freqParams[1], 'f', 2), "ms²"});
-    tableData.append({"VLF", QString::number(freqParams[2], 'f', 2), "ms²"});
-    tableData.append({"ULF", QString::number(freqParams[3], 'f', 2), "ms²"});
-    tableData.append({"Total Power", QString::number(freqParams[4], 'f', 2), "ms²"});
-    tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'f', 2), "-"});
+    tableData.append({"HF", QString::number(freqParams[0], 'e', 2), "ms²"});
+    tableData.append({"LF", QString::number(freqParams[1], 'e', 2), "ms²"});
+    tableData.append({"VLF", QString::number(freqParams[2], 'e', 2), "ms²"});
+    tableData.append({"ULF", QString::number(freqParams[3], 'e', 2), "ms²"});
+    tableData.append({"Total Power", QString::number(freqParams[4], 'e', 2), "ms²"});
+    tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'e', 2), "-"});
 
     // Ensure frame_2 has a layout
     QLayout* layout = ui->frame_2->layout();
