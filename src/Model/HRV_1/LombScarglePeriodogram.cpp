@@ -54,6 +54,12 @@ void LombScarglePeriodogram::calculatePeriodogramLS(const Signal& ecg){
         }
         D = CC * SS - CS * CS;
 
+        if (abs(D) < 1e-10){
+            periodogram_[i] = 0;
+            continue;
+        }
+        else{
         periodogram_[i] = (SS * YC * YC + CC * YS * YS - 2.0 * CS * YC * YS) / (YY * D);
+        }
     }
 }
