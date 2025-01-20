@@ -17,6 +17,9 @@ void LombScarglePeriodogram::calculatePeriodogramLS(const Signal& ecg){
     double D;
 
     const std::vector<double>& x = ecg.getX();
+
+
+
     const std::vector<double>& y = ecg.getY();
     int n = ecg.getSize();
     int samplingRate = ecg.getSamplingRate();
@@ -25,7 +28,7 @@ void LombScarglePeriodogram::calculatePeriodogramLS(const Signal& ecg){
     throw std::runtime_error("Error: ECG signal must contain at least two samples.");
 }
 
-    double duration = x.back() - x.front();
+    double duration = (x.back() - x.front());
     double minFreq = 1.0 / duration;
     double maxFreq = 0.5 * samplingRate;
     size_t nFrequencies = std::max(static_cast<size_t>(500), static_cast<size_t>(samplingRate * duration / 100));
@@ -66,6 +69,7 @@ void LombScarglePeriodogram::calculatePeriodogramLS(const Signal& ecg){
         else{
         periodogram_[i] = (SS * YC * YC + CC * YS * YS - 2.0 * CS * YC * YS) / (YY * D);
         }
+        periodogram_[i] *= 1e6;
     }
 
 }
