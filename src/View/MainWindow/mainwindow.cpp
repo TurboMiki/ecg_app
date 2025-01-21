@@ -82,29 +82,37 @@ void MainWindow::updateButtonStates() {
 
 void MainWindow::on_START_clicked()
 {
-    if (!isFileSelected) {
-        if (ui->linePath->text().isEmpty()) {
-            QMessageBox::warning(this, "Warning", "Please select a file first!");
-            return;
-        } else {
-            QMessageBox::warning(this, "Warning", "Error");
-            return;
-        }
+    // Validate file selection
+    if (!isFileSelected || ui->linePath->text().isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Please select a file first!");
+        return;
+    }
+
+    // Validate parameters
+    if (baselineParams.isEmpty() || rpeaksParams.isEmpty()) {
+        QMessageBox::warning(this, "Warning", "Configuration parameters are not set!");
+        return;
     }
     
-    // Set progress bar
-    QProgressDialog progress("Processing HRV...", "Cancel", 0, 100, this);
+    // Setup progress dialog
+    QProgressDialog progress("Processing signal...", "Cancel", 0, 100, this);
     progress.setWindowModality(Qt::WindowModal);
-    progress.setMinimumDuration(2);
+    progress.setMinimumDuration(0);
     progress.setValue(0);
 
     try {
-        // First apply the baseline filter with current parameters
+        // Apply baseline filter
+        progress.setLabelText("Applying baseline filter...");
+        Signal inputSignal = fileReader.read_MLII();
+        if (inputSignal.getY().empty()) {
+            throw std::runtime_error("Input signal is empty");
+        }
+
+        // Select and apply appropriate baseline filter
         if (currentBaselineMethod == "MM") {
             auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
             movingMeanFilter->set(baselineParams["Window Length"]);
             baseline.setFilter(std::move(movingMeanFilter));
-            baseline.filterSignal(fileReader.read_MLII());
         }
         else if (currentBaselineMethod == "Btw") {
             auto butterworthFilter = std::make_unique<ButterworthFilter>();
@@ -114,7 +122,6 @@ void MainWindow::on_START_clicked()
                 baselineParams["Lower Frequency"]
             );
             baseline.setFilter(std::move(butterworthFilter));
-            baseline.filterSignal(fileReader.read_MLII());
         }
         else if (currentBaselineMethod == "SG") {
             auto sgFilter = std::make_unique<SavitzkyGolayFilter>();
@@ -123,46 +130,64 @@ void MainWindow::on_START_clicked()
                 baselineParams["Filter Order"]
             );
             baseline.setFilter(std::move(sgFilter));
-            baseline.filterSignal(fileReader.read_MLII());
         }
         else if (currentBaselineMethod == "LMS") {
             auto lmsFilter = std::make_unique<LMSFilter>();
-            // Assuming LMS uses the reference file path that was set previously
             baseline.setFilter(std::move(lmsFilter));
-            baseline.filterSignal(fileReader.read_MLII());
         }
-        progress.setValue(10);
+        else {
+            throw std::runtime_error("Invalid baseline filter method selected");
+        }
+
+        baseline.filterSignal(inputSignal);
+        progress.setValue(20);
 
         // RPeaks detection
+        progress.setLabelText("Detecting R peaks...");
         std::vector<int> peaks;
         Signal filtered = baseline.getSignal();
         
+        if (filtered.getY().empty()) {
+            throw std::runtime_error("Filtered signal is empty");
+        }
+
         if (currentRPeaksMethod == "PT") {
             rPeaks.setParams("PAN_TOMPKINS", rpeaksParams["Window Length"], rpeaksParams["Threshold"]);
         }
         else if (currentRPeaksMethod == "Hilbert") {
             rPeaks.setParams("HILBERT",rpeaksParams["Proximity"],rpeaksParams["Threshold"]);
         }
-
-        if (rPeaks.detectRPeaks(filtered.getY(), filtered.getSamplingRate(), peaks)) {
-            // Convert peaks to QList
-            r_peak_positions.clear();
-            r_peak_positions.reserve(peaks.size());
-            for (const auto& peak : peaks) {
-                r_peak_positions.append(peak);
-            }
+        else {
+            throw std::runtime_error("Invalid R-peaks detection method selected");
         }
-        progress.setValue(20);
+
+        if (!rPeaks.detectRPeaks(filtered.getY(), filtered.getSamplingRate(), peaks)) {
+            throw std::runtime_error("R-peak detection failed");
+        }
+
+        if (peaks.empty()) {
+            throw std::runtime_error("No R peaks detected");
+        }
+
+        // Convert peaks to QList
+        r_peak_positions.clear();
+        r_peak_positions.reserve(peaks.size());
+        std::copy(peaks.begin(), peaks.end(), std::back_inserter(r_peak_positions));
+        
+        progress.setValue(40);
 
         // Waves detection
+        progress.setLabelText("Detecting wave components...");
         waveDetector.setRPeaks(r_peak_positions);
         if (!waveDetector.detectWaves(filtered)) {
             throw std::runtime_error("Wave detection failed");
         }
-        progress.setValue(30);
+        progress.setValue(60);
 
         // HRV_1 analysis
+        progress.setLabelText("Performing HRV analysis...");
         std::vector<double> peakTimes;
+        peakTimes.reserve(r_peak_positions.size());
         for (int idx : r_peak_positions) {
             peakTimes.push_back(filtered.getX()[idx]);
         }
@@ -175,14 +200,17 @@ void MainWindow::on_START_clicked()
         // Get HRV_1 results
         timeParams = hrvAnalyzer.getTimeParams();
         freqParams = hrvAnalyzer.getFreqParams();
-        progress.setValue(50);
-
-        // HRV_2 analysis
-        hrv2.process(rPeaksSignal);
         progress.setValue(70);
 
+        // HRV_2 analysis
+        progress.setLabelText("Calculating HRV_2 parameters...");
+        hrv2.process(rPeaksSignal);
+        progress.setValue(80);
+
         // HRV_DFA analysis
+        progress.setLabelText("Performing DFA analysis...");
         std::vector<double> rr_intervals;
+        rr_intervals.reserve(r_peak_positions.size() - 1);
         for (int i = 1; i < r_peak_positions.size(); ++i) {
             double interval = (filtered.getX()[r_peak_positions[i]] - filtered.getX()[r_peak_positions[i-1]]);
             rr_intervals.push_back(interval);
@@ -200,11 +228,19 @@ void MainWindow::on_START_clicked()
             currentPlot == PLOT_TYPE::RAW_PLOT) {
             createPlot(ui->frame_2->layout(), currentPlot);
         }
+        
         progress.setValue(100);
+        QMessageBox::information(this, "Success", 
+            "Signal analysis completed successfully!");
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
             QString("Analysis failed: %1").arg(e.what()));
+        isSignalAnalyzed = false;
+        updateButtonStates();
+    } catch (...) {
+        QMessageBox::critical(this, "Error", 
+            "An unknown error occurred during analysis.");
         isSignalAnalyzed = false;
         updateButtonStates();
     }
@@ -231,29 +267,6 @@ void MainWindow::onSettingsChanged(const QString &baselineMethod,const QMap<QStr
     }
 }
 
-void MainWindow::get_settings(const QStringList &data)
-{
-    write_settings(data);
-}
-
-void MainWindow::write_settings(const QStringList &data)
-{
-    this->parameter1 = data[0];
-    this->parameter2 = data[1];
-    this->parameter3 = data[2];
-    this->parameter4 = data[3];
-    this->parameter5 = data[4];
-}
-
-void MainWindow::debug_settings()
-{
-    qDebug() << this->parameter1;
-    qDebug() << this->parameter2;
-    qDebug() << this->parameter3;
-    qDebug() << this->parameter4;
-    qDebug() << this->parameter5;
-}
-
 void MainWindow::on_btnPath_clicked()
 {
     QString fileFilter = "All Supported Files (*.dat *.csv *.xlsx);;Data Files (*.dat);;CSV Files (*.csv);;Excel Files (*.xlsx)";
@@ -266,6 +279,7 @@ void MainWindow::on_btnPath_clicked()
         fileReader.read_file();
         fileReader.write_measured_time();
 
+        setDefaultParameters(); 
         // Apply default filter with default parameters
         auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
         movingMeanFilter->set(baselineParams["Window Length"]);  // Use stored default parameter
@@ -411,12 +425,12 @@ void MainWindow::setDefaultParameters()
     // Set default RPeaks parameters
     rpeaksParams.clear();
     if (currentRPeaksMethod == "PT") {
-        rpeaksParams["Window Length"] = 200;
-        rpeaksParams["Threshold"] = 1.5;
+        rpeaksParams["Window Length"] = 0;
+        rpeaksParams["Threshold"] = 0;
     }
     else if (currentRPeaksMethod == "Hilbert") {
-        rpeaksParams["Proximity"] = 200;
-        rpeaksParams["Threshold"] = 1.5;
+        rpeaksParams["Proximity"] = 0;
+        rpeaksParams["Threshold"] = 0;
     }
 }
 

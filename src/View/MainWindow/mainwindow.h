@@ -57,10 +57,7 @@ signals:
 private slots:
     void on_START_clicked();
     void on_Config_clicked();
-    void get_settings(const QStringList &data);
-    void write_settings(const QStringList &data);
     // void showParametersInTable(const QString& title, const QVector<QVector<QString>>& data);
-    void debug_settings();
 
     void on_btnPath_clicked();
     void on_btnRaw_clicked();
