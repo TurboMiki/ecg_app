@@ -4,8 +4,8 @@
 //Class for filtering using Savitzky-Golay method
 class SavitzkyGolayFilter : public Filter {
 private:
-    int filterLength;
-    int order;    
+    int filterLength = 5;
+    int order = 3;    
 public:
     /*
     void set(int filterLength, int order)

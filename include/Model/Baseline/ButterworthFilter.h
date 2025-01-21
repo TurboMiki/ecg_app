@@ -4,8 +4,8 @@
 //Class for filtering using Butterworth method
 class ButterworthFilter : public Filter {
 private:
-    int order;
-    std::vector<double> freq{0.0, 0.0}; // Initialize with default values
+    int order = 3;
+    std::vector<double> freq{1.0, 12.0}; // Initialize with default values
 public:
     /*
     void set(int order, float f1, float f2)
