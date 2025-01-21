@@ -17,7 +17,7 @@ Signal SavitzkyGolayFilter::applyFilter(const Signal& inputSignal) const {
     int smoothingPoint = this->filterLength;
 
     //Initialize filter with given parameters
-    gram_sg::SavitzkyGolayFilter filter(this->filterLength, this->order, smoothingPoint, derivative);
+    gram_sg::SavitzkyGolayFilter filter(this->filterLength, smoothingPoint, this->order, derivative);
     
     //Allocate memory for filtered samples
     std::vector<double> newY;
