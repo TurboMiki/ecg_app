@@ -79,6 +79,8 @@ private slots:
     void on_showTable_stateChanged(int state);
     void resizeLayout();
 
+    void updateButtonStates();
+
 private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;

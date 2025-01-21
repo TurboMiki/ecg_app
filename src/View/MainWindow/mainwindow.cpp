@@ -37,11 +37,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Set icons
-    //ui->START->setIcon(QIcon(":/icons/play.png"));
-    //ui->Config->setIcon(QIcon("C:/Projects/ecg_app_GUI/src/View/MainWindow/icons/gear.png"));
-    //ui->START->setIconSize(QSize(50, 50));
-
     // Initialize SettingsForm
     ptrSettingsForm = new SettingsForm(this);
 
@@ -49,6 +44,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ptrSettingsForm, &SettingsForm::pass_values, this, &MainWindow::get_settings);
     connect(this, &MainWindow::requestData, ptrSettingsForm, &SettingsForm::pass_values);
     connect(ui->showTable, &QCheckBox::stateChanged, this, &MainWindow::on_showTable_stateChanged);
+
+    // Initialize button states
+    isFileSelected = false;
+    isSignalAnalyzed = false;
+    updateButtonStates();
 }
 
 MainWindow::~MainWindow()
@@ -60,16 +60,43 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::updateButtonStates() {
+    // Buttons that require file selection
+    ui->btnRaw->setEnabled(isFileSelected);
+    ui->btnFECG->setEnabled(isFileSelected);
+    ui->START->setEnabled(isFileSelected);
+    ui->checkBoxRP->setEnabled(isFileSelected);
+    ui->checkBoxQRS->setEnabled(isFileSelected);
+    ui->pushButton->setEnabled(isFileSelected);
+
+    // Buttons that require signal analysis
+    ui->btnHRV_1->setEnabled(isSignalAnalyzed);
+    ui->btnHRV2_PC->setEnabled(isSignalAnalyzed);
+    ui->btnHRV2_hist->setEnabled(isSignalAnalyzed);
+    ui->btnHRV_DFA->setEnabled(isSignalAnalyzed);
+    ui->btnHeartClass->setEnabled(isSignalAnalyzed);
+}
+
 void MainWindow::on_START_clicked()
 {
     // Implementation for START button
-    if (isFileSelected){
-        //Set progress bar
-        QProgressDialog progress("Processing HRV...", "Cancel", 0, 100, this);
-        progress.setWindowModality(Qt::WindowModal);
-        progress.setMinimumDuration(2);
-        progress.setValue(0);
+    if (!isFileSelected) {
+        if (ui->linePath->text().isEmpty()) {
+            QMessageBox::warning(this, "Warning", "Please select a file first!");
+            return;
+        } else {
+            QMessageBox::warning(this, "Warning", "Error");
+            return;
+        }
+    }
+    
+    //Set progress bar
+    QProgressDialog progress("Processing HRV...", "Cancel", 0, 100, this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(2);
+    progress.setValue(0);
 
+    try {
         // Rpeaks
         std::vector<int> peaks;
         Signal filtered = baseline.getSignal();
@@ -128,16 +155,16 @@ void MainWindow::on_START_clicked()
         dfa.process(rr_intervals);
         progress.setValue(100);
         isSignalAnalyzed = true;
-
-        // HearthClass
-    }else {
-        if (ui->linePath->text().isEmpty()) {
-            QMessageBox::warning(this, "Warning", "Please select a file first!");
-            return;
-        }else {
-            QMessageBox::warning(this, "Warning", "Error");
-        }
+        updateButtonStates();
+        // HeartClass
+        
     }
+    catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", QString("Analysis failed: %1").arg(e.what()));
+        isSignalAnalyzed = false;
+        updateButtonStates();
+    }
+    
 }
 
 void MainWindow::on_Config_clicked()
@@ -189,9 +216,9 @@ void MainWindow::on_btnPath_clicked()
         baseline.filterSignal(fileReader.read_MLII());
         isFileSelected = true;
         isSignalAnalyzed = false;
+        updateButtonStates();  // Update button states after file selection
 
         // Ensure frame_2 has a layout
-
         QLayout* layout = ui->frame_2->layout();
         if (!layout) {
             layout = new QVBoxLayout(ui->frame_2);
