@@ -5,6 +5,8 @@
 #include <fstream>
 #include <numeric>
 #include <cmath>
+#include <algorithm>
+#include <cstdint>
 
 // Zmienne dla czytelności
 const int R_S_INTERVAL = 60;
@@ -40,7 +42,11 @@ enum typeOfActivation HeartClass::CheckAVDissociation(const std::vector<int>& P,
 }
 
 void HeartClass::process(const std::vector<int>& rPeaks, const std::vector<int>& P, const std::vector<int>& QRSend, const std::vector<int>& QRSonset, int fs) {
-    activations_t nextClassification;
+    supraventricularCount = 0;
+    ventricularCount = 0;
+    diffDiseaseCount = 0;
+    artifactCount = 0;
+    totalCount = 0;
 
     for (const auto& r : rPeaks) {
         auto itQ = std::lower_bound(QRSonset.begin(), QRSonset.end(), r);
@@ -55,31 +61,57 @@ void HeartClass::process(const std::vector<int>& rPeaks, const std::vector<int>&
             int QRS = *itS - *itQ;
             int QRSms = SamplesToMilliseconds(QRS, fs);
 
+            typeOfActivation actType;
             if (QRSms >= QRS_MIN && QRSms <= QRS_MAX) {
                 if (QRSms >= QRS_WIDE_THRESHOLD) {
                     if (intervalRS <= R_S_INTERVAL) {
-                        nextClassification.actType = CheckAVDissociation(P, r, QRSonset);
-                        if (nextClassification.actType == DIFF_DISEASE) {
-                            nextClassification.actType = DIFF_DISEASE;
-                        } else {
-                            nextClassification.actType = VENTRICULAR;
-                        }
+                        actType = CheckAVDissociation(P, r, QRSonset);
                     } else {
-                        nextClassification.actType = VENTRICULAR;
+                        actType = VENTRICULAR;
                     }
                 } else {
-                    nextClassification.actType = SUPRAVENTRICULAR;
+                    actType = SUPRAVENTRICULAR;
                 }
             } else {
-                nextClassification.actType = ARTIFACT;
+                actType = ARTIFACT;
             }
 
-            nextClassification.Ridx = r;
-            activations.push_back(nextClassification);
+            switch (actType) {
+                case SUPRAVENTRICULAR:
+                    supraventricularCount++;
+                break;
+                case VENTRICULAR:
+                    ventricularCount++;
+                break;
+                case DIFF_DISEASE:
+                    diffDiseaseCount++;
+                break;
+                case ARTIFACT:
+                    artifactCount++;
+                break;
+            }
+
+            totalCount++;
         }
     }
 }
 
-const std::vector<activations_t>& HeartClass::getActivations() const {
-    return activations;
+int HeartClass::getSupraventricularCount() const {
+    return supraventricularCount;
+}
+
+int HeartClass::getVentricularCount() const {
+    return ventricularCount;
+}
+
+int HeartClass::getDiffDiseaseCount() const {
+    return diffDiseaseCount;
+}
+
+int HeartClass::getArtifactCount() const {
+    return artifactCount;
+}
+
+int HeartClass::getTotalCount() const {
+    return totalCount;
 }

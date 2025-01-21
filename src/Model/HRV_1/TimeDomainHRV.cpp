@@ -53,7 +53,7 @@ double TimeDomainHRV::calculateNN50() const{
 
     for (size_t i = 0; i < nnIntervals_.size() - 1; i++){
         double diff = nnIntervals_[i + 1] - nnIntervals_[i];
-        if (diff > 50){count++;}
+        if (abs(diff) > 50){count++;}
     }
     return count;
 }
