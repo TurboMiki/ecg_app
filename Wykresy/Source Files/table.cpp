@@ -10,13 +10,9 @@ Table::Table(QWidget *parent)
 {
     // Ustawienie układu dla widgetu
     QVBoxLayout* layout = new QVBoxLayout(this);
-
-    // Dodanie tytułu do layoutu
-    layout->addWidget(titleLabel);  // Dodajemy tytuł do layoutu
-
-    // Dodanie tabeli do layoutu
-    layout->addWidget(tableWidget);  // Dodajemy tabelę do layoutu
-
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(titleLabel);
+    layout->addWidget(tableWidget);
     setLayout(layout);
 }
 

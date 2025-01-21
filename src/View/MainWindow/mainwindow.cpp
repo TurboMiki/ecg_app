@@ -128,8 +128,7 @@ void MainWindow::on_START_clicked()
             peakTimes.push_back(filtered.getX()[idx]);
         }
 
-        Signal rPeaksSignal(peakTimes, std::vector<double>(peakTimes.size(), 1.0),
-                            filtered.getSamplingRate());
+        Signal rPeaksSignal(peakTimes, std::vector<double>(peakTimes.size(), 1.0),filtered.getSamplingRate());
 
         HRV_1 hrvAnalyzer(rPeaksSignal, filtered);
         hrvAnalyzer.process();
@@ -146,9 +145,9 @@ void MainWindow::on_START_clicked()
         // HRV_DFA
 
         std::vector<double> rr_intervals;
-        for (int i = 1; i < r_peak_positions.size(); ++i) {
-            double interval = (filtered.getX()[r_peak_positions[i]] -
-                               filtered.getX()[r_peak_positions[i-1]]);
+        for (int i = 1; i < r_peak_positions.size(); ++i) 
+        {
+            double interval = (filtered.getX()[r_peak_positions[i]] -filtered.getX()[r_peak_positions[i-1]]);
             rr_intervals.push_back(interval);
         }
 
@@ -632,6 +631,7 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
         QMessageBox::information(this, "HRV Parameters", results);
         break;
     }
+    
     case PLOT_TYPE::HISTOGRAM :{
         Signal histogram = hrv2.getRHist();
 
@@ -650,40 +650,41 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
         // Show results
         auto params = hrv2.getParams();
         QString results = QString("HRV Results:\n")
-                          + QString("TINN: %1 ms\n").arg(params[4], 0, 'f', 2)
-                          + QString("Triangular Index: %1").arg(params[5], 0, 'f', 2);
+                            + QString("Opimal N [s]: %1 ms\n").arg(params[2], 0, 'f', 2)
+                            + QString("Opimal M [s]: %1 ms\n").arg(params[3], 0, 'f', 2)
+                            + QString("TINN: %1 ms\n").arg(params[4], 0, 'f', 2)
+                            + QString("Triangular Index: %1\n").arg(params[5], 0, 'f', 2)
+                            + QString("SD1: %1 ms\n").arg(params[6], 0, 'f', 2)
+                            + QString("SD2: %1 ms\n").arg(params[7], 0, 'f', 2);
         QMessageBox::information(this, "HRV Parameters", results);
         break;
     }
 
     case PLOT_TYPE::HRV_TABLE:{
-        QVector<QVector<QString>> tableData;
+    QVector<QVector<QString>> tableData;
+    
+    tableData.append({"Parameter", "Value", "Unit"});
 
-        // Headers
-        tableData.append({"Parameter", "Value", "Unit"});
+    tableData.append({"RR Mean", QString::number(timeParams[0], 'e', 2), "ms"});
+    tableData.append({"SDNN", QString::number(timeParams[1], 'e', 2), "ms"});
+    tableData.append({"RMSSD", QString::number(timeParams[2], 'e', 2), "ms"});
+    tableData.append({"NN50", QString::number(timeParams[3], 'f', 0), "count"});
+    tableData.append({"pNN50", QString::number(timeParams[4], 'e', 2), "%"});
 
-        // Time domain parameters
-        tableData.append({"RR Mean", QString::number(timeParams[0], 'e', 2), "ms"});
-        tableData.append({"SDNN", QString::number(timeParams[1], 'e', 2), "ms"});
-        tableData.append({"RMSSD", QString::number(timeParams[2], 'e', 2), "ms"});
-        tableData.append({"NN50", QString::number(timeParams[3], 'e', 2), "count"});
-        tableData.append({"pNN50", QString::number(timeParams[4], 'e', 2), "%"});
+    tableData.append({"HF", QString::number(freqParams[0], 'e', 2), "ms²"});
+    tableData.append({"LF", QString::number(freqParams[1], 'e', 2), "ms²"});
+    tableData.append({"VLF", QString::number(freqParams[2], 'e', 2), "ms²"});
+    tableData.append({"ULF", QString::number(freqParams[3], 'e', 2), "ms²"});
+    tableData.append({"Total Power", QString::number(freqParams[4], 'e', 2), "ms²"});
+    tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'e', 3), "-"});
 
-        // Frequency domain parameters
-        tableData.append({"HF", QString::number(freqParams[0], 'e', 2), "ms²"});
-        tableData.append({"LF", QString::number(freqParams[1], 'e', 2), "ms²"});
-        tableData.append({"VLF", QString::number(freqParams[2], 'e', 2), "ms²"});
-        tableData.append({"ULF", QString::number(freqParams[3], 'e', 2), "ms²"});
-        tableData.append({"Total Power", QString::number(freqParams[4], 'e', 2), "ms²"});
-        tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'e', 2), "-"});
+    Table* tableWidget = new Table(ui->frame_2);
+    layout->addWidget(tableWidget);
+    tableWidget->setTitle("Heart Rate Variability Analysis Results");
+    tableWidget->setData(tableData);
 
-        // Create and set up the table
-        hrvTable = new Table(ui->frame_2);
-        layout->addWidget(hrvTable);
-
-        hrvTable->setTitle("Heart Rate Variability Analysis Results");
-        hrvTable->setData(tableData);
-        break;
+    hrvTable = tableWidget;
+    break;
     }
 
     default:
