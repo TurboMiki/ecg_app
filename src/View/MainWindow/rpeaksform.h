@@ -15,6 +15,9 @@ public:
     explicit RPeaksForm(QWidget *parent = nullptr);
     ~RPeaksForm();
 
+    QString getCurrentMethod() const;
+    QMap<QString, double> getCurrentParameters() const;
+
 private:
     Ui::RPeaksForm *ui;
 };
