@@ -36,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
     , plotWidget(nullptr)
 {
     ui->setupUi(this);
+    ui->showTable->setEnabled(false); 
 
     // Initialize SettingsForm
     ptrSettingsForm = new SettingsForm(this);
@@ -43,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect signals and slots
     connect(ptrSettingsForm, &SettingsForm::pass_values, this, &MainWindow::get_settings);
     connect(this, &MainWindow::requestData, ptrSettingsForm, &SettingsForm::pass_values);
-    connect(ui->showTable, &QCheckBox::stateChanged, this, &MainWindow::on_showTable_stateChanged);
+    // connect(ui->showTable, &QCheckBox::stateChanged, this, &MainWindow::on_showTable_stateChanged);
 
     // Initialize button states
     isFileSelected = false;
@@ -331,90 +332,90 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
     createPlot(layout, currentPlot);
 }
 
-void MainWindow::on_showTable_stateChanged(int state)
-{
-    for(int i=0;i<2;i++) {
-        // Pobierz układ przypisany do frame_2
-        QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->frame_2->layout());
-        if (!layout) {
-            layout = new QVBoxLayout(ui->frame_2);
-            ui->frame_2->setLayout(layout);
-        }
+// void MainWindow::on_showTable_stateChanged(int state)
+// {
+//     for(int i=0;i<2;i++) {
+//         // Pobierz układ przypisany do frame_2
+//         QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->frame_2->layout());
+//         if (!layout) {
+//             layout = new QVBoxLayout(ui->frame_2);
+//             ui->frame_2->setLayout(layout);
+//         }
 
-        // Jeśli checkbox jest zaznaczony
-        if (state == Qt::Checked) {
-            ui->pushButton->setDisabled(true);
-            if (!tableWidget) {
-                // Tworzenie nowej tabeli, jeśli jeszcze nie istnieje
-                tableWidget = new Table(this);
-                //tableWidget->setMinimumWidth(200);
-                //tableWidget->setMinimumHeight(0);
-                //tableWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-                //tableWidget->setTitle("ECG Signal Data");
+//         // Jeśli checkbox jest zaznaczony
+//         if (state == Qt::Checked) {
+//             ui->pushButton->setDisabled(true);
+//             if (!tableWidget) {
+//                 // Tworzenie nowej tabeli, jeśli jeszcze nie istnieje
+//                 tableWidget = new Table(this);
+//                 //tableWidget->setMinimumWidth(200);
+//                 //tableWidget->setMinimumHeight(0);
+//                 //tableWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+//                 //tableWidget->setTitle("ECG Signal Data");
 
-                // Przykładowe dane dla tabeli
-                QVector<QVector<QString>> tableData;
-                Signal signal = fileReader.read_MLII();
-                for (int i = 0; i < signal.getY().size(); ++i) {
-                    QVector<QString> row;
-                    row.append(QString::number(signal.getX()[i]));  // Czas
-                    row.append(QString::number(signal.getY()[i]));  // Napięcie
-                    tableData.append(row);
-                }
+//                 // Przykładowe dane dla tabeli
+//                 QVector<QVector<QString>> tableData;
+//                 Signal signal = fileReader.read_MLII();
+//                 for (int i = 0; i < signal.getY().size(); ++i) {
+//                     QVector<QString> row;
+//                     row.append(QString::number(signal.getX()[i]));  // Czas
+//                     row.append(QString::number(signal.getY()[i]));  // Napięcie
+//                     tableData.append(row);
+//                 }
 
-                // Ustaw dane w tabeli
-                qobject_cast<Table*>(tableWidget)->setData(tableData);
-            }
+//                 // Ustaw dane w tabeli
+//                 qobject_cast<Table*>(tableWidget)->setData(tableData);
+//             }
 
-            // Dodaj tabelę do układu, jeśli jej nie ma
+//             // Dodaj tabelę do układu, jeśli jej nie ma
 
-            layout->addWidget(tableWidget);
+//             layout->addWidget(tableWidget);
 
-            // Dostosuj proporcje: wykres (1 część), tabela (1 część)
-            if (currentPlotWidget) {
-                //currentPlotWidget->setVisible(true);
-            }
-            //layout->setStretch(0, 1); // Wykres
-            //layout->setStretch(1, 1); // Tabela
-            tableWidget->show();
+//             // Dostosuj proporcje: wykres (1 część), tabela (1 część)
+//             if (currentPlotWidget) {
+//                 //currentPlotWidget->setVisible(true);
+//             }
+//             //layout->setStretch(0, 1); // Wykres
+//             //layout->setStretch(1, 1); // Tabela
+//             tableWidget->show();
 
-            // Jeśli checkbox jest odznaczony
-            // Ukryj tabelę
-            if(i<1){
-                if (tableWidget) {
-                    layout->removeWidget(tableWidget);
-                    tableWidget->hide();
-                    ui->pushButton->setDisabled(false);
-                    //delete tableWidget;
-                }
+//             // Jeśli checkbox jest odznaczony
+//             // Ukryj tabelę
+//             if(i<1){
+//                 if (tableWidget) {
+//                     layout->removeWidget(tableWidget);
+//                     tableWidget->hide();
+//                     ui->pushButton->setDisabled(false);
+//                     //delete tableWidget;
+//                 }
 
-                // Dostosuj proporcje: wykres zajmuje całą wysokość
-                if (currentPlotWidget) {
-                    currentPlotWidget->setVisible(true);
-                }
-                layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
-                resizeLayout();
-            }
-        } else {  // Jeśli checkbox jest odznaczony
-            // Ukryj tabelę, i usuń ją
-            if (tableWidget) {
-                layout->removeWidget(tableWidget);
-                tableWidget->hide();
-                ui->pushButton->setDisabled(false);
-                //delete tableWidget;
-            }
+//                 // Dostosuj proporcje: wykres zajmuje całą wysokość
+//                 if (currentPlotWidget) {
+//                     currentPlotWidget->setVisible(true);
+//                 }
+//                 layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
+//                 resizeLayout();
+//             }
+//         } else {  // Jeśli checkbox jest odznaczony
+//             // Ukryj tabelę, i usuń ją
+//             if (tableWidget) {
+//                 layout->removeWidget(tableWidget);
+//                 tableWidget->hide();
+//                 ui->pushButton->setDisabled(false);
+//                 //delete tableWidget;
+//             }
 
-            // Dostosuj proporcje: wykres zajmuje całą wysokość
-            if (currentPlotWidget) {
-                currentPlotWidget->setVisible(true);
-            }
-            layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
-        }
+//             // Dostosuj proporcje: wykres zajmuje całą wysokość
+//             if (currentPlotWidget) {
+//                 currentPlotWidget->setVisible(true);
+//             }
+//             layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
+//         }
 
-        // Dostosuj geometrię układu
-        resizeLayout();
-    }
-}
+//         // Dostosuj geometrię układu
+//         resizeLayout();
+//     }
+// }
 
 void MainWindow::resizeLayout()
 {

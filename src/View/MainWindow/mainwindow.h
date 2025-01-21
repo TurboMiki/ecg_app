@@ -59,6 +59,7 @@ private slots:
     void on_Config_clicked();
     void get_settings(const QStringList &data);
     void write_settings(const QStringList &data);
+    // void showParametersInTable(const QString& title, const QVector<QVector<QString>>& data);
     void debug_settings();
 
     void on_btnPath_clicked();
@@ -76,7 +77,7 @@ private slots:
     void on_pushButton_clicked();
 
     void createPlot(QLayout* layout,PLOT_TYPE plotType);
-    void on_showTable_stateChanged(int state);
+    // void on_showTable_stateChanged(int state);
     void resizeLayout();
 
     void updateButtonStates();
