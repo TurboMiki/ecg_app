@@ -177,6 +177,8 @@ void MainWindow::on_START_clicked()
 
         if (peaks.empty()) {
             throw std::runtime_error("No R peaks detected");
+        } else {
+            cout << peaks.size() << endl;
         }
 
         // Convert peaks to QList
