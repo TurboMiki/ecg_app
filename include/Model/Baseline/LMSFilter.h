@@ -10,6 +10,8 @@ private:
     double REGULARIZATION = 1e-6;
     double inBuffer[NUM_TAPS];
     double weights[NUM_TAPS];
+    //Reference signal
+    Signal refSignal = NULL;
 
 public:
     /*
@@ -18,17 +20,23 @@ public:
     */
     LMSFilter();
     /*
+    void set(const Signal& refSignal)
+    Method used to set reference signal
+    */
+    void set(const Signal& refSignal);
+    /*
     Signal applyFilter(const Signal& inputSignal) const override
-    Original method used for applying filtering. 
-    Depreciated cause of changes in architecture, throws exception and recommends to use adaptiveFilter method instead.
+    Method used for applying filtering. 
     */
     Signal applyFilter(const Signal& inputSignal) const override;
+    
     /*
     Signal adaptiveFilter(const Signal& inputSignal, const Signal& refSignal)
+    **Depreciated**
     Method used for applying adaptive filtering.
     Input arguments:
         - inputSignal: signal that is to be filtered
         - refSignal: reference signal, one that filtering algorithm should assume as ideal and try to achieve it
     */
-    Signal adaptiveFilter(const Signal& inputSignal, const Signal& refSignal);
+    //Signal adaptiveFilter(const Signal& inputSignal, const Signal& refSignal);
 };

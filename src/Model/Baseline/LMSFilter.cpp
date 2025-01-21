@@ -11,13 +11,18 @@ LMSFilter::LMSFilter() {
     }
 }
 
-//Handling errors concerning differences in architecture
-Signal LMSFilter::applyFilter(const Signal& inputSignal) const {
-    throw std::runtime_error("LMS Filter requires a reference signal. Use adaptiveFilter instead.");
+LMSFilter::set(const Signal& refSignal) {
+    this->refSignal = refSignal;
 }
 
+//Depreciated
+//Handling errors concerning differences in architecture
+/*Signal LMSFilter::applyFilter(const Signal& inputSignal) const {
+    throw std::runtime_error("LMS Filter requires a reference signal. Use adaptiveFilter instead.");
+}*/
+
 //Working filtering method
-Signal LMSFilter::adaptiveFilter(const Signal& inputSignal, const Signal& refSignal) {
+Signal LMSFilter::applyFilter(const Signal& inputSignal) {
     //Structure of various parameters specified for filter from LMS library
     AfData afData = {
         STEPSIZE,
@@ -29,6 +34,9 @@ Signal LMSFilter::adaptiveFilter(const Signal& inputSignal, const Signal& refSig
         0.0 // initial error
     };
     
+    //Establishing reference signal
+    refSignal = this->refSignal;
+
     //Fetching samples of input and reference signals
     std::vector<double> oldY = inputSignal.getY();
     std::vector<double> refY = refSignal.getY();
