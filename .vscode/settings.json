@@ -61,6 +61,8 @@
         "vector": "cpp",
         "complex": "cpp",
         "xlocbuf": "cpp",
+        "xiosbase": "cpp"
+        "xlocbuf": "cpp",
         "numeric": "cpp",
         "tuple": "cpp",
         "type_traits": "cpp",
