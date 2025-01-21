@@ -341,7 +341,7 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
 //             layout = new QVBoxLayout(ui->frame_2);
 //             ui->frame_2->setLayout(layout);
 //         }
-
+//
 //         // Jeśli checkbox jest zaznaczony
 //         if (state == Qt::Checked) {
 //             ui->pushButton->setDisabled(true);
@@ -352,7 +352,7 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
 //                 //tableWidget->setMinimumHeight(0);
 //                 //tableWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 //                 //tableWidget->setTitle("ECG Signal Data");
-
+//
 //                 // Przykładowe dane dla tabeli
 //                 QVector<QVector<QString>> tableData;
 //                 Signal signal = fileReader.read_MLII();
@@ -362,15 +362,15 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
 //                     row.append(QString::number(signal.getY()[i]));  // Napięcie
 //                     tableData.append(row);
 //                 }
-
+//
 //                 // Ustaw dane w tabeli
 //                 qobject_cast<Table*>(tableWidget)->setData(tableData);
 //             }
-
+//
 //             // Dodaj tabelę do układu, jeśli jej nie ma
-
+//
 //             layout->addWidget(tableWidget);
-
+//
 //             // Dostosuj proporcje: wykres (1 część), tabela (1 część)
 //             if (currentPlotWidget) {
 //                 //currentPlotWidget->setVisible(true);
@@ -378,7 +378,7 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
 //             //layout->setStretch(0, 1); // Wykres
 //             //layout->setStretch(1, 1); // Tabela
 //             tableWidget->show();
-
+//
 //             // Jeśli checkbox jest odznaczony
 //             // Ukryj tabelę
 //             if(i<1){
@@ -388,7 +388,7 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
 //                     ui->pushButton->setDisabled(false);
 //                     //delete tableWidget;
 //                 }
-
+//
 //                 // Dostosuj proporcje: wykres zajmuje całą wysokość
 //                 if (currentPlotWidget) {
 //                     currentPlotWidget->setVisible(true);
@@ -404,14 +404,14 @@ void MainWindow::on_checkBoxQRS_stateChanged(int state)
 //                 ui->pushButton->setDisabled(false);
 //                 //delete tableWidget;
 //             }
-
+//
 //             // Dostosuj proporcje: wykres zajmuje całą wysokość
 //             if (currentPlotWidget) {
 //                 currentPlotWidget->setVisible(true);
 //             }
 //             layout->setStretch(0, 2); // Wykres zajmuje pełną wysokość
 //         }
-
+//
 //         // Dostosuj geometrię układu
 //         resizeLayout();
 //     }
@@ -444,8 +444,8 @@ void MainWindow::resizeLayout()
 
 void MainWindow::on_btnHeartClass_clicked()
 {
-    if (ui->linePath->text().isEmpty()) {
-        QMessageBox::warning(this, "Warning", "Please select a file first!");
+    if (!isSignalAnalyzed) {
+        QMessageBox::warning(this, "Warning", "Please analyze the signal first by clicking START!");
         return;
     }
 
@@ -456,65 +456,44 @@ void MainWindow::on_btnHeartClass_clicked()
         progress.setMinimumDuration(0);
         progress.setValue(0);
 
-        // Get and process the signal
-        Signal inputSignal = fileReader.read_MLII();
-        Signal filteredSignal = baseline.filterSignal(inputSignal);
+        // Get filtered signal
+        Signal filteredSignal = baseline.getSignal();
         progress.setValue(20);
 
-        // Detect R-peaks if not already detected
-        std::vector<int> peaks;
-        if (r_peak_positions.isEmpty()) {
-            rPeaks.setParams("PAN_TOMPKINS", 15, 0.3);
-            if (!rPeaks.detectRPeaks(filteredSignal.getY(), inputSignal.getSamplingRate(), peaks)) {
-                throw std::runtime_error("R-peaks detection failed");
-            }
-            r_peak_positions.reserve(peaks.size());
-            for (const auto& peak : peaks) {
-                r_peak_positions.append(peak);
-            }
-        } else {
-            // Convert QList to vector
-            peaks.reserve(r_peak_positions.size());
-            for (const auto& peak : r_peak_positions) {
-                peaks.push_back(peak);
-            }
-        }
-        progress.setValue(40);
-
-        // Detect waves if needed
-        Waves waveDetector(filteredSignal, r_peak_positions);
-        if (!waveDetector.detectWaves()) {
-            throw std::runtime_error("Wave detection failed");
-        }
-        progress.setValue(60);
-
+        // Convert QList r_peak_positions to std::vector
+        std::vector<int> rPeaksVec(r_peak_positions.begin(), r_peak_positions.end());
+        
         // Get wave points and convert QVector to std::vector
         QVector<int> qrsEndsQV = waveDetector.getQRSEnds();
         QVector<int> qrsOnsetsQV = waveDetector.getQRSOnsets();
-        QVector<int> pEndsQV = waveDetector.getPEnds();
+        QVector<int> pOnsetsQV = waveDetector.getPOnsets();
 
         // Convert to std::vector
         std::vector<int> qrsEndsVec(qrsEndsQV.begin(), qrsEndsQV.end());
         std::vector<int> qrsOnsetsVec(qrsOnsetsQV.begin(), qrsOnsetsQV.end());
-        std::vector<int> pEndsVec(pEndsQV.begin(), pEndsQV.end());
+        std::vector<int> pOnsetsVec(pOnsetsQV.begin(), pOnsetsQV.end());
         
-        // Process heart classification
-        heartClassifier.process(peaks, 
-                              pEndsVec,  // Using P-ends for P-wave points
+        progress.setValue(60);
+
+        // Process heart classification with new interface
+        heartClassifier.process(rPeaksVec, 
+                              pOnsetsVec,
                               qrsEndsVec,
                               qrsOnsetsVec,
-                              inputSignal.getSamplingRate());
+                              filteredSignal.getSamplingRate());
+        
         progress.setValue(80);
 
-        // Get results
-        const auto& activations = heartClassifier.getActivations();
+        // Get results using the new getter methods
+        QString resultMessage = QString("Heart Classification Results:\n\n")
+            + QString("Supraventricular beats: %1\n").arg(heartClassifier.getSupraventricularCount())
+            + QString("Ventricular beats: %1\n").arg(heartClassifier.getVentricularCount())
+            + QString("Other cardiac conditions: %1\n").arg(heartClassifier.getDiffDiseaseCount())
+            + QString("Possible artifacts: %1\n").arg(heartClassifier.getArtifactCount())
+            + QString("\nTotal analyzed beats: %1").arg(heartClassifier.getTotalCount());
 
-        // Show results in message box
-        QString resultMessage = QString("Heart Classification Results:\nTotal activations detected: %1")
-                                .arg(activations.size());
-        
         progress.setValue(100);
-        QMessageBox::information(this, "Heart Classification", resultMessage);
+        QMessageBox::information(this, "Heart Classification Results", resultMessage);
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
@@ -692,4 +671,3 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
         break;
     }
 }
-
