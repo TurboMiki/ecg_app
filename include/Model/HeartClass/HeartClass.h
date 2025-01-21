@@ -14,11 +14,6 @@ enum typeOfActivation {
     ARTIFACT
 };
 
-struct activations_t {
-    typeOfActivation actType; // Typ aktywacji
-    int Ridx; // Indeks R-peaka
-};
-
 class HeartClass {
 public:
     // Metoda process do przetwarzania danych
@@ -28,12 +23,21 @@ public:
                  const std::vector<int>& QRSonset,
                  int fs);
 
-    // Getter do uzyskania wyników klasyfikacji
-    const std::vector<activations_t>& getActivations() const;
+    // Gettery do uzyskania wystapien poszczegolnych aktywacji
+    int getSupraventricularCount() const;
+    int getVentricularCount() const;
+    int getDiffDiseaseCount() const;
+    int getArtifactCount() const;
+    int getTotalCount() const;
 
 private:
+    int supraventricularCount = 0;
+    int ventricularCount = 0;
+    int diffDiseaseCount = 0;
+    int artifactCount = 0;
+    int totalCount = 0;
+
     typeOfActivation CheckAVDissociation(const std::vector<int>& P, int currR, const std::vector<int>& QRSonset);
-    std::vector<activations_t> activations;
 };
 
 #endif
