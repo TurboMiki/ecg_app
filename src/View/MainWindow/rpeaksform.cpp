@@ -12,3 +12,13 @@ RPeaksForm::~RPeaksForm()
 {
     delete ui;
 }
+
+/*
+Pan-Tompkins
+    PT_WL_SpinBox
+    PT_T_SpinBox
+
+Hilbert
+    H_P_SpinBox
+    H_T_SpinBox
+*/

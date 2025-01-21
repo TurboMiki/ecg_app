@@ -8,6 +8,20 @@ SettingsForm::SettingsForm(QWidget *parent)
     , ui(new Ui::SettingsForm)
 {
     ui->setupUi(this);
+    
+    // Display Baseline form by default when settings form is opened
+    QLayout* layout = ui->toDisplay->layout();
+    if (!layout) {
+        layout = new QVBoxLayout(ui->toDisplay);
+        ui->toDisplay->setLayout(layout);
+    }
+    
+    // Create and add Baseline form as default
+    BaselineForm* baselineWidget = new BaselineForm();
+    layout->addWidget(baselineWidget);
+    
+    // Set combobox to Baseline
+    ui->ModuleComboBox->setCurrentIndex(1);
 }
 
 SettingsForm::~SettingsForm()
@@ -17,24 +31,12 @@ SettingsForm::~SettingsForm()
 
 void SettingsForm::on_btnSave_clicked()
 {
-    /*
-    QString parameter1 = ui->Param1->text();
-    QString parameter2 = ui->Param2->text();
-    QString parameter3 = ui->Param3->text();
-    QString parameter4 = ui->Param4->text();
-    QString parameter5 = ui->Param5->text();
-
-    QStringList data;
-    data << parameter1 << parameter2 << parameter3 << parameter4 << parameter5;
-
-    emit pass_values(data); // Emitowanie sygnału z danymi
-    */
     this->close();
 }
 
 void SettingsForm::on_btnCancel_clicked()
 {
-    this->close(); // Zamknięcie okna ustawień
+    this->close();
 }
 
 void SettingsForm::on_ModuleComboBox_activated(int index)
@@ -52,21 +54,20 @@ void SettingsForm::on_ModuleComboBox_activated(int index)
         delete child;
     }
 
-    // Dummy (Blank Page) -> 0
-    // Baseline -> 1
-    // RPeaks -> 2
-
-    if(index==1) {
-        // Create and add form
+    // Handle only Baseline and RPeaks options
+    if(index == 0) { // Baseline
         BaselineForm* baselineWidget = new BaselineForm();
         layout->addWidget(baselineWidget);
     }
-
-    if(index==2) {
-        // Create and add form
+    else if(index == 1) { // RPeaks
         RPeaksForm* rpeaksWidget = new RPeaksForm();
         layout->addWidget(rpeaksWidget);
     }
-
 }
 
+/*
+SettingsForm
+    btnSave
+    btnCancel
+    ModuleComboBox
+*/

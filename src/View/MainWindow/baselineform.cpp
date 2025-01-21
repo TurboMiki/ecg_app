@@ -27,4 +27,21 @@ void BaselineForm::on_LMS_RF_ToolButton_clicked()
     fileReader.read_file();
     fileReader.write_measured_time();
 }
+/*
+Moving Mean:
+    MM_WL_SpinBox
 
+ButterWorth:
+    Btw_FO_SpinBox
+    Btw_UF_SpinBox
+    Btw_LF_SpinBox
+
+Savitzky-Golay
+    SG_WL_SpinBox
+    SG_FO_SpinBox
+
+LMS
+    LMS_RF_ToolButton
+    LMS_RF_FilePath
+
+*/
