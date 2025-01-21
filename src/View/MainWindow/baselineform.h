@@ -16,6 +16,9 @@ public:
     explicit BaselineForm(QWidget *parent = nullptr);
     ~BaselineForm();
 
+    QString getCurrentFilter() const;
+    QMap<QString, double> getCurrentParameters() const;
+
 private slots:
     void on_LMS_RF_ToolButton_clicked();
 
