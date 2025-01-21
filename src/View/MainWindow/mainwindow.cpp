@@ -157,7 +157,7 @@ void MainWindow::on_START_clicked()
         isSignalAnalyzed = true;
         updateButtonStates();
         // HeartClass
-        
+
     }
     catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", QString("Analysis failed: %1").arg(e.what()));
@@ -302,26 +302,34 @@ void MainWindow::on_btnHRV_DFA_clicked()
 
 void MainWindow::on_checkBoxRP_stateChanged(int state)
 {
+    // If RP checkbox is checked, uncheck QRS
+    if (state == Qt::Checked) {
+        ui->checkBoxQRS->blockSignals(true);  // Prevent recursive signal handling
+        ui->checkBoxQRS->setCheckState(Qt::Unchecked);
+        ui->checkBoxQRS->blockSignals(false);
+    }
+
     QLayout* layout = ui->frame_2->layout();
-    if (currentPlot!=PLOT_TYPE::RAW_PLOT && currentPlot!= PLOT_TYPE::FILTERED_PLOT){
+    if (currentPlot != PLOT_TYPE::RAW_PLOT && currentPlot != PLOT_TYPE::FILTERED_PLOT) {
         currentPlot = PLOT_TYPE::RAW_PLOT;
     }
-    if (state == Qt::Checked){
-        ui->checkBoxQRS->setCheckState(Qt::Unchecked);
-    }
-    createPlot(layout,currentPlot);
+    createPlot(layout, currentPlot);
 }
 
 void MainWindow::on_checkBoxQRS_stateChanged(int state)
 {
+    // If QRS checkbox is checked, uncheck RP
+    if (state == Qt::Checked) {
+        ui->checkBoxRP->blockSignals(true);  // Prevent recursive signal handling
+        ui->checkBoxRP->setCheckState(Qt::Unchecked);
+        ui->checkBoxRP->blockSignals(false);
+    }
+
     QLayout* layout = ui->frame_2->layout();
-    if (currentPlot!=PLOT_TYPE::RAW_PLOT && currentPlot!= PLOT_TYPE::FILTERED_PLOT){
+    if (currentPlot != PLOT_TYPE::RAW_PLOT && currentPlot != PLOT_TYPE::FILTERED_PLOT) {
         currentPlot = PLOT_TYPE::RAW_PLOT;
     }
-    if (state == Qt::Checked){
-        ui->checkBoxRP->setCheckState(Qt::Unchecked);
-    }
-    createPlot(layout,currentPlot);
+    createPlot(layout, currentPlot);
 }
 
 void MainWindow::on_showTable_stateChanged(int state)
