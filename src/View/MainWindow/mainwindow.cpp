@@ -230,8 +230,6 @@ void MainWindow::on_START_clicked()
         }
         
         progress.setValue(100);
-        QMessageBox::information(this, "Success", 
-            "Signal analysis completed successfully!");
 
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", 
