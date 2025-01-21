@@ -82,6 +82,8 @@ private slots:
 
     void updateButtonStates();
 
+    void onSettingsChanged(const QString &module, const QString &method, const QMap<QString, double> &params);
+    
 private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;

@@ -42,8 +42,9 @@ MainWindow::MainWindow(QWidget *parent)
     ptrSettingsForm = new SettingsForm(this);
 
     // Connect signals and slots
-    connect(ptrSettingsForm, &SettingsForm::pass_values, this, &MainWindow::get_settings);
-    connect(this, &MainWindow::requestData, ptrSettingsForm, &SettingsForm::pass_values);
+    // connect(ptrSettingsForm, &SettingsForm::pass_values, this, &MainWindow::get_settings);
+    connect(ptrSettingsForm, &SettingsForm::settingsChanged, this, &MainWindow::onSettingsChanged);
+    // connect(this, &MainWindow::requestData, ptrSettingsForm, &SettingsForm::pass_values);
     // connect(ui->showTable, &QCheckBox::stateChanged, this, &MainWindow::on_showTable_stateChanged);
 
     // Initialize button states
@@ -171,6 +172,28 @@ void MainWindow::on_Config_clicked()
 {
     if (ptrSettingsForm) {
         ptrSettingsForm->show();
+    }
+}
+
+void MainWindow::onSettingsChanged(const QString &module, const QString &method, const QMap<QString, double> &params)
+{
+    // Here you can handle the new settings
+    // For example, update your filter or RPeaks detection settings
+    if (module == "Baseline") {
+        // Update baseline filter settings
+        if (method == "MM") {
+            auto movingMeanFilter = std::make_unique<MovingMeanFilter>();
+            movingMeanFilter->set(params["Window Length"]);
+            baseline.setFilter(std::move(movingMeanFilter));
+        }
+        // Add other filter types...
+    }
+    else if (module == "RPeaks") {
+        // Update RPeaks detection settings
+        if (method == "PT") {
+            rPeaks.setParams("PAN_TOMPKINS", params["Window Length"], params["Threshold"]);
+        }
+        // Add Hilbert method...
     }
 }
 
