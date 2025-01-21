@@ -318,7 +318,6 @@ void MainWindow::on_btnRaw_clicked()
 
     // Create and add plot
     if (isFileSelected){
-    QLayout* layout = ui->frame_2->layout();
     currentPlot = PLOT_TYPE::RAW_PLOT;
     createPlot(ui->frame_2->layout(),currentPlot);
     }
@@ -328,7 +327,6 @@ void MainWindow::on_btnFECG_clicked()
 {
     // Create and add plot
     if (isFileSelected){
-    QLayout* layout = ui->frame_2->layout();
     currentPlot = PLOT_TYPE::FILTERED_PLOT;
     createPlot(ui->frame_2->layout(),currentPlot);
     }
@@ -351,7 +349,6 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_btnHRV_1_clicked()
 {
     if (isSignalAnalyzed){
-        QLayout* layout = ui->frame_2->layout();
         currentPlot = PLOT_TYPE::HRV_TABLE;
         createPlot(ui->frame_2->layout(),currentPlot);
     }
@@ -665,32 +662,46 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
             QMessageBox::warning(this, "Error", "No data available to plot! Signal is empty.");
             return;
         }
+        QString legend = "Filtered signal";
+        QString title = "Filtered ECG signal";
+        title.append(" (");
+        if (currentBaselineMethod=="MM"){
+            title.append("Moving mean");
+        }else if(currentBaselineMethod=="Btw"){
+            title.append("Butterworth");
+        }else if(currentBaselineMethod=="SG"){
+            title.append("Savitzky-Golay");
+        }else if(currentBaselineMethod=="LMS"){
+            title.append("LMS");
+        }
+        title.append(")");
 
         if (ui->checkBoxQRS->isChecked() && isSignalAnalyzed){
             Waves_Plot* plotWidget = new Waves_Plot();
             layout->addWidget(plotWidget);
 
             // Update plot with all wave components
+            title.append(" with wave components");
             plotWidget->updateWavesPlot(
                 signal,
-                "ECG Signal",                               // Main signal legend
+                legend,                                     // Main signal legend
                 waveDetector.getQRSOnsets(), "QRS Onset",   // First highlight set
                 waveDetector.getQRSEnds(), "QRS End",       // Second highlight set
                 waveDetector.getPOnsets(), "P Onset",       // Third highlight set
                 waveDetector.getPEnds(), "P End",           // Fourth highlight set
                 waveDetector.getTEnds(), "T End",           // Fifth highlight set
-                "ECG Signal with Wave Components",          // Title
+                title,                                      // Title
                 "Time [s]",                                 // X-axis label
                 "Voltage [mV]"                              // Y-axis label
                 );
         }else if (ui->checkBoxRP->isChecked() && isSignalAnalyzed){
             Basic_Plot* plotWidget = new Basic_Plot();
             layout->addWidget(plotWidget);
-            plotWidget->updateBasicPlot(signal, r_peak_positions, "MLII Signal","Indeksy R","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+            plotWidget->updateBasicPlot(signal, r_peak_positions, legend,"Indeksy R",title, "Time [s]", "Voltage [mV]");
         }else{
             Basic_Plot* plotWidget = new Basic_Plot();
             layout->addWidget(plotWidget);
-            plotWidget->updateBasicPlot(signal, {}, "MLII Signal","","ECG Signal (MLII)", "Time [s]", "Voltage [mV]");
+            plotWidget->updateBasicPlot(signal, {}, legend,"",title, "Time [s]", "Voltage [mV]");
         }
         break;
     }
@@ -714,13 +725,6 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
             "RR(n) [s]",          // X-axis label
             "RR(n+1) [s]"         // Y-axis label
             );
-
-        // Show SD1/SD2 results
-        QString results = QString("Poincaré Plot Parameters:\n")
-                          + QString("SD1: %1 ms\n").arg(params[6] * 1000, 0, 'f', 2)
-                          + QString("SD2: %1 ms\n").arg(params[7] * 1000, 0, 'f', 2)
-                          + QString("SD1/SD2: %1").arg(params[6] / params[7], 0, 'f', 3);
-        QMessageBox::information(this, "HRV Parameters", results);
         break;
     }
     
@@ -738,37 +742,34 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
             "RR Interval [s]",
             "Count"
             );
-
-        // Show results
-        auto params = hrv2.getParams();
-        QString results = QString("HRV Results:\n")
-                            + QString("Opimal N [s]: %1 ms\n").arg(params[2], 0, 'f', 2)
-                            + QString("Opimal M [s]: %1 ms\n").arg(params[3], 0, 'f', 2)
-                            + QString("TINN: %1 ms\n").arg(params[4], 0, 'f', 2)
-                            + QString("Triangular Index: %1\n").arg(params[5], 0, 'f', 2)
-                            + QString("SD1: %1 ms\n").arg(params[6], 0, 'f', 2)
-                            + QString("SD2: %1 ms\n").arg(params[7], 0, 'f', 2);
-        QMessageBox::information(this, "HRV Parameters", results);
         break;
     }
 
     case PLOT_TYPE::HRV_TABLE:{
+    auto params = hrv2.getParams();
     QVector<QVector<QString>> tableData;
     
     tableData.append({"Parameter", "Value", "Unit"});
 
-    tableData.append({"RR Mean", QString::number(timeParams[0], 'e', 2), "ms"});
-    tableData.append({"SDNN", QString::number(timeParams[1], 'e', 2), "ms"});
-    tableData.append({"RMSSD", QString::number(timeParams[2], 'e', 2), "ms"});
+    tableData.append({"RR Mean", QString::number(timeParams[0], 'f', 2), "ms"});
+    tableData.append({"SDNN", QString::number(timeParams[1], 'f', 2), "ms"});
+    tableData.append({"RMSSD", QString::number(timeParams[2], 'f', 2), "ms"});
     tableData.append({"NN50", QString::number(timeParams[3], 'f', 0), "count"});
-    tableData.append({"pNN50", QString::number(timeParams[4], 'e', 2), "%"});
+    tableData.append({"pNN50", QString::number(timeParams[4], 'f', 2), "%"});
 
     tableData.append({"HF", QString::number(freqParams[0], 'e', 2), "ms²"});
     tableData.append({"LF", QString::number(freqParams[1], 'e', 2), "ms²"});
     tableData.append({"VLF", QString::number(freqParams[2], 'e', 2), "ms²"});
     tableData.append({"ULF", QString::number(freqParams[3], 'e', 2), "ms²"});
     tableData.append({"Total Power", QString::number(freqParams[4], 'e', 2), "ms²"});
-    tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'e', 3), "-"});
+    tableData.append({"LF/HF Ratio", QString::number(freqParams[5], 'e', 2), ""});
+
+    tableData.append({"Highest bin", QString::number(params[0], 'f', 2), ""});
+    tableData.append({"RR intervals in highest bin", QString::number(params[1], 'f', 2), "count"});
+    tableData.append({"Opimal N", QString::number(params[2], 'f', 2), "s"});
+    tableData.append({"Opimal M", QString::number(params[3], 'f', 2), "s"});
+    tableData.append({"TINN", QString::number(params[4], 'f', 2), "ms"});
+    tableData.append({"Triangular Index", QString::number(params[5], 'f', 2), ""});
 
     Table* tableWidget = new Table(ui->frame_2);
     layout->addWidget(tableWidget);
