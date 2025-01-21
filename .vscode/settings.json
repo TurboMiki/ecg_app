@@ -58,7 +58,9 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "variant": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "complex": "cpp",
+        "xlocbuf": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true,
     "cmake.generator": "Ninja", // Use Ninja for faster builds
