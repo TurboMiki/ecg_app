@@ -9,10 +9,12 @@ class Waves {
 public:
     // Constructor takes filtered signal and R-peaks
     Waves(const Signal& filteredSignal, const QList<int>& rPeaks);
+    Waves();
     
     // Process all waves - returns true if successful
     bool detectWaves();
-    
+    bool detectWaves(Signal& filteredSignal);
+    void setRPeaks(const QList<int>& rPeaks);
     // Getters for wave points
     QVector<int> getQRSOnsets() const { return qrsOnsets; }
     QVector<int> getQRSEnds() const { return qrsEnds; }

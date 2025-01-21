@@ -36,8 +36,7 @@ Histogram_Plot::Histogram_Plot(QWidget *parent)
 
 Histogram_Plot::~Histogram_Plot()
 {
-    delete customPlot;  // Zwolnienie pamięci
-    delete bars;  // Zwolnienie pamięci dla wskaźnika bars
+    delete customPlot;  // Zwolnienie pamięci  // Zwolnienie pamięci dla wskaźnika bars
 }
 
 void Histogram_Plot::setTitle(const QString& title)

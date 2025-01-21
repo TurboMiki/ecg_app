@@ -13,6 +13,28 @@ Waves::Waves(const Signal& filteredSignal, const QList<int>& rPeaks)
         rPeaksList.push_back(peak);
     }
 }
+Waves::Waves(){
+
+}
+
+void Waves::setRPeaks(const QList<int>& rPeaks){
+    rPeaksList.reserve(rPeaks.size());
+    for (int peak : rPeaks) {
+        rPeaksList.push_back(peak);
+    }
+}
+
+bool Waves::detectWaves(Signal& filteredSignal){
+    signal = filteredSignal;
+    try {
+        if (!detectQRSComplex()) return false;
+        if (!detectPWave()) return false;
+        if (!detectTWave()) return false;
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
 
 // Funkcja pomocnicza do obliczania percentyla wartości bezwzględnych w wektorze danych
 double Waves::percentileAbs(const std::vector<double>& data, double percentile) {
