@@ -7,7 +7,10 @@ Scatter_Plot::Scatter_Plot(QWidget *parent)
 {
 
     // Parametry wykresu
-    customPlot->setGeometry(10, 10, 800, 600);
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(customPlot);
+    setLayout(layout);
 
     customPlot->addGraph();
 

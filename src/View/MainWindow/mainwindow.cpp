@@ -656,4 +656,3 @@ void MainWindow::createPlot(QLayout* layout,PLOT_TYPE plotType){
     }
 }
 
-
