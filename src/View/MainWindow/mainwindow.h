@@ -25,6 +25,9 @@ enum class PLOT_TYPE{
     RAW_PLOT,
     FILTERED_PLOT,
     TABLE,
+    POINCARE,
+    HISTOGRAM,
+    HRV_TABLE,
     NO_PLOT
 };
 
@@ -67,8 +70,6 @@ private slots:
     void on_btnHRV_DFA_clicked();
     void on_btnHeartClass_clicked();
 
-    void displayHRVResults(const std::array<double, 5>& timeParams, const std::array<double, 6>& freqParams);
-
     void on_checkBoxRP_stateChanged(int state);
     void on_checkBoxQRS_stateChanged(int state);
 
@@ -92,7 +93,7 @@ private:
     QString parameter5;
     QString filePath;
 
-    PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
+    PLOT_TYPE currentPlot = PLOT_TYPE::NO_PLOT;
     PLOT_FLAGS currentFlag = PLOT_FLAGS::FLAG_NONE;
 
     DataReader fileReader;
