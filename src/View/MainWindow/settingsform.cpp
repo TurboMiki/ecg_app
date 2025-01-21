@@ -33,6 +33,7 @@ SettingsForm::SettingsForm(QWidget *parent)
     // Set initial selection
     ui->ModuleComboBox->setCurrentIndex(0);  // Set to Baseline
 }
+
 SettingsForm::~SettingsForm()
 {
     delete ui;

@@ -139,8 +139,18 @@ void MainWindow::on_START_clicked()
             throw std::runtime_error("Invalid baseline filter method selected");
         }
 
-        baseline.filterSignal(inputSignal);
-        progress.setValue(20);
+        try {
+            baseline.filterSignal(inputSignal);
+            progress.setValue(20);
+        } catch (const std::exception& e) {
+            QMessageBox::critical(this, "Filtering Error",
+                QString("Failed to filter signal: %1").arg(e.what()));
+            return;
+        } catch (...) {
+            QMessageBox::critical(this, "Filtering Error",
+                "An unknown error occurred while filtering the signal");
+            return;
+        }
 
         // RPeaks detection
         progress.setLabelText("Detecting R peaks...");
@@ -407,16 +417,16 @@ void MainWindow::setDefaultParameters()
     // Set default Baseline parameters
     baselineParams.clear();
     if (currentBaselineMethod == "MM") {
-        baselineParams["Window Length"] = 5;  // Default window length
+        baselineParams["Window Length"] = 5;
     } 
     else if (currentBaselineMethod == "Btw") {
-        baselineParams["Filter Order"] = 5;
-        baselineParams["Upper Frequency"] = 1.0;
-        baselineParams["Lower Frequency"] = 0.1;
+        baselineParams["Filter Order"] = 3;
+        baselineParams["Upper Frequency"] = 15.0;
+        baselineParams["Lower Frequency"] = 1.0;
     }
     else if (currentBaselineMethod == "SG") {
         baselineParams["Window Length"] = 5;
-        baselineParams["Filter Order"] = 5;
+        baselineParams["Filter Order"] = 3;
     }
     // LMS parameters are handled via file selection
 
