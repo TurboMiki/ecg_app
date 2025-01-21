@@ -6,6 +6,9 @@ RPeaksForm::RPeaksForm(QWidget *parent)
     , ui(new Ui::RPeaksForm)
 {
     ui->setupUi(this);
+
+    ui->PT_WL_SpinBox->setMinimum(0);
+    ui->H_P_SpinBox->setMinimum(0);
 }
 
 RPeaksForm::~RPeaksForm()

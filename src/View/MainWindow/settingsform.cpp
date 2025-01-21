@@ -66,11 +66,10 @@ void SettingsForm::on_btnSave_clicked()
     }
 
     // Show debug message with all parameters
-    QMessageBox::information(this, "Selected Parameters", debugMsg);
+    // QMessageBox::information(this, "Selected Parameters", debugMsg);
 
     // Emit signal with both sets of parameters
-    emit settingsChanged("Baseline", baselineMethod, baselineParams);
-    emit settingsChanged("RPeaks", rpeaksMethod, rpeaksParams);
+    emit settingsChanged(baselineMethod, baselineParams, rpeaksMethod, rpeaksParams);
 
     this->close();
 }

@@ -60,7 +60,8 @@
         "variant": "cpp",
         "vector": "cpp",
         "complex": "cpp",
-        "xlocbuf": "cpp"
+        "xlocbuf": "cpp",
+        "xiosbase": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true,
     "cmake.generator": "Ninja", // Use Ninja for faster builds

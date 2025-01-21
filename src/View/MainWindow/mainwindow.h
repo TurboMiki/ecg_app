@@ -82,7 +82,7 @@ private slots:
 
     void updateButtonStates();
 
-    void onSettingsChanged(const QString &module, const QString &method, const QMap<QString, double> &params);
+    void onSettingsChanged(const QString &baselineMethod,const QMap<QString, double> &baselineParams,const QString &rpeaksMethod,const QMap<QString, double> &rpeaksParams);
     
 private:
     Ui::MainWindow *ui;
@@ -118,6 +118,13 @@ private:
     std::vector<int> qrs_onsets;
     std::vector<int> qrs_ends; 
     Table* hrvTable;
+
+    QString currentBaselineMethod = "MM";  // Default to Moving Mean
+    QString currentRPeaksMethod = "PT";    // Default to Pan-Tompkins
+    QMap<QString, double> baselineParams;
+    QMap<QString, double> rpeaksParams;
+
+    void setDefaultParameters();
 };
 
 #endif // MAINWINDOW_H

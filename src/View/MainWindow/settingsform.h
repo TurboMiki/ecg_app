@@ -18,7 +18,11 @@ public:
     ~SettingsForm();
 
 signals:
-    void settingsChanged(const QString &module, const QString &method, const QMap<QString, double> &params);
+        void settingsChanged(
+        const QString &baselineMethod, 
+        const QMap<QString, double> &baselineParams,
+        const QString &rpeaksMethod, 
+        const QMap<QString, double> &rpeaksParams);
 
 private slots:
     void on_btnSave_clicked();
