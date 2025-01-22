@@ -8,8 +8,8 @@ private:
     static const int NUM_TAPS = 32;
     double STEPSIZE = 0.01;
     double REGULARIZATION = 1e-6;
-    double inBuffer[NUM_TAPS];
-    double weights[NUM_TAPS];
+    mutable double inBuffer[NUM_TAPS]={0};
+    mutable double weights[NUM_TAPS]={0};
     //Reference signal
     Signal refSignal;
 

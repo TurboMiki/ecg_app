@@ -4,11 +4,11 @@
 
 //Initialize few parameters needed for this filter
 LMSFilter::LMSFilter() {
-    //Initialize buffers and weights
+/*     //Initialize buffers and weights
     for(int i = 0; i < NUM_TAPS; i++) {
         inBuffer[i] = 0.0;
         weights[i] = 0.0;
-    }
+    } */
 }
 
 void LMSFilter::set(Signal& refSignal) {
@@ -23,18 +23,14 @@ void LMSFilter::set(Signal& refSignal) {
 
 //Working filtering method
 Signal LMSFilter::applyFilter(const Signal& inputSignal) const {
-    //New buffer and weights vectors for patching const function collision
-    double inBufferCopy[NUM_TAPS] = {0.0};
-    double weightsCopy[NUM_TAPS] = {0.0};
-    
     //Structure of various parameters specified for filter from LMS library
     AfData afData = {
         STEPSIZE,
         REGULARIZATION,
         NUM_TAPS,
-        inBufferCopy,
+        inBuffer,
         0, // initial buffer index
-        weightsCopy,
+        weights,
         0.0 // initial error
     };
     
