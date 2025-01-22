@@ -11,7 +11,7 @@ LMSFilter::LMSFilter() {
     }
 }
 
-LMSFilter::set(const Signal& refSignal) {
+void LMSFilter::set(Signal& refSignal) {
     this->refSignal = refSignal;
 }
 
@@ -22,20 +22,22 @@ LMSFilter::set(const Signal& refSignal) {
 }*/
 
 //Working filtering method
-Signal LMSFilter::applyFilter(const Signal& inputSignal) {
+Signal LMSFilter::applyFilter(const Signal& inputSignal) const {
+    //New buffer and weights vectors for patching const function collision
+    double inBufferCopy[NUM_TAPS] = {0.0};
+    double weightsCopy[NUM_TAPS] = {0.0};
+    
     //Structure of various parameters specified for filter from LMS library
     AfData afData = {
         STEPSIZE,
         REGULARIZATION,
         NUM_TAPS,
-        inBuffer,
+        inBufferCopy,
         0, // initial buffer index
-        weights,
+        weightsCopy,
         0.0 // initial error
     };
     
-    //Establishing reference signal
-    refSignal = this->refSignal;
 
     //Fetching samples of input and reference signals
     std::vector<double> oldY = inputSignal.getY();

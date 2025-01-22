@@ -11,7 +11,7 @@ private:
     double inBuffer[NUM_TAPS];
     double weights[NUM_TAPS];
     //Reference signal
-    Signal refSignal = NULL;
+    Signal refSignal;
 
 public:
     /*
@@ -23,7 +23,7 @@ public:
     void set(const Signal& refSignal)
     Method used to set reference signal
     */
-    void set(const Signal& refSignal);
+    void set(Signal& refSignal);
     /*
     Signal applyFilter(const Signal& inputSignal) const override
     Method used for applying filtering. 
