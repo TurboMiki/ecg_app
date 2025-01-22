@@ -11,6 +11,7 @@
 #include "HRV_1.h"
 #include "HRV_2.h"
 #include "HRV_DFA.h"
+#include "HeartClass.h"
 
 #include "settingsform.h"
 
@@ -21,7 +22,21 @@
 
 
 enum class PLOT_TYPE{
-    RAW_PLOT
+    RAW_PLOT,
+    FILTERED_PLOT,
+    TABLE,
+    POINCARE,
+    HISTOGRAM,
+    HRV_TABLE,
+    NO_PLOT
+};
+
+enum class PLOT_FLAGS{
+    FILTER_MM,
+    FILTER_SG,
+    FILTER_BUTTER,
+    FILTER_LMS,
+    FLAG_NONE
 };
 
 QT_BEGIN_NAMESPACE
@@ -42,9 +57,7 @@ signals:
 private slots:
     void on_START_clicked();
     void on_Config_clicked();
-    void get_settings(const QStringList &data);
-    void write_settings(const QStringList &data);
-    void debug_settings();
+    // void showParametersInTable(const QString& title, const QVector<QVector<QString>>& data);
 
     void on_btnPath_clicked();
     void on_btnRaw_clicked();
@@ -53,9 +66,7 @@ private slots:
     void on_btnHRV2_PC_clicked();
     void on_btnHRV2_hist_clicked();
     void on_btnHRV_DFA_clicked();
-
-    void displayHRVResults(const std::array<double, 5>& timeParams, 
-                         const std::array<double, 6>& freqParams);
+    void on_btnHeartClass_clicked();
 
     void on_checkBoxRP_stateChanged(int state);
     void on_checkBoxQRS_stateChanged(int state);
@@ -63,12 +74,20 @@ private slots:
     void on_pushButton_clicked();
 
     void createPlot(QLayout* layout,PLOT_TYPE plotType);
+    // void on_showTable_stateChanged(int state);
+    void resizeLayout();
 
+    void updateButtonStates();
+
+    void onSettingsChanged(const QString &baselineMethod,const QMap<QString, double> &baselineParams,const QString &rpeaksMethod,const QMap<QString, double> &rpeaksParams);
+    
 private:
     Ui::MainWindow *ui;
     SettingsForm *ptrSettingsForm;
     Basic_Plot *plotWidget;
-    
+    bool isFileSelected = false;
+    bool isSignalAnalyzed = false;
+
     QString parameter1;
     QString parameter2;
     QString parameter3;
@@ -76,20 +95,33 @@ private:
     QString parameter5;
     QString filePath;
 
+    PLOT_TYPE currentPlot = PLOT_TYPE::NO_PLOT;
+    PLOT_FLAGS currentFlag = PLOT_FLAGS::FLAG_NONE;
+
     DataReader fileReader;
-    PLOT_TYPE cuurentPlot = PLOT_TYPE::RAW_PLOT;
-
     Baseline baseline;
-
     RPeaks rPeaks;
+    HRV_2 hrv2;
+    HeartClass heartClassifier;
+    Waves waveDetector;
+    HRV_DFA dfa;
+
+    std::array<double,5> timeParams;
+    std::array<double,6> freqParams;
+
     QList<int> r_peak_positions;
+    QWidget *tableWidget;
+    QWidget *currentPlotWidget;
     std::vector<int> qrs_onsets;
     std::vector<int> qrs_ends; 
-
     Table* hrvTable;
 
-    HRV_2 hrv2;
+    QString currentBaselineMethod = "MM";  // Default to Moving Mean
+    QString currentRPeaksMethod = "PT";    // Default to Pan-Tompkins
+    QMap<QString, double> baselineParams;
+    QMap<QString, double> rpeaksParams;
 
+    void setDefaultParameters();
 };
 
 #endif // MAINWINDOW_H

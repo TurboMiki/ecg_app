@@ -101,8 +101,20 @@
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
             <widget class="QPushButton" name="btnRaw">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="text">
               <string>Raw</string>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -961,6 +973,16 @@
        </size>
       </property>
      </spacer>
+    </item>
+    <item row="3" column="2">
+     <widget class="QCheckBox" name="showTable">
+      <property name="text">
+       <string>Show Table</string>
+      </property>
+      <property name="tristate">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

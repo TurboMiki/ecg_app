@@ -58,7 +58,27 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "variant": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "complex": "cpp",
+        "xlocbuf": "cpp",
+        "xiosbase": "cpp"
+        "xlocbuf": "cpp",
+        "numeric": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "utility": "cpp",
+        "xfacet": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp",
+        "xlocinfo": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "xloctime": "cpp",
+        "xmemory": "cpp",
+        "xtr1common": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true,
     "cmake.generator": "Ninja", // Use Ninja for faster builds
