@@ -160,14 +160,12 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
     std::vector<double> filter_coefficients = {-0.125, -0.25, 0.25, 0.125};
     std::vector<double> convolved_signal(signal.size() - filter_coefficients.size() + 1);
     for (size_t i = 0; i < convolved_signal.size(); ++i) {
-        convolved_signal[i] = std::inner_product(filter_coefficients.begin(), filter_coefficients.end(),
-                                                 signal.begin() + i, 0.0);
+        convolved_signal[i] = std::inner_product(filter_coefficients.begin(), filter_coefficients.end(),signal.begin() + i, 0.0);
     }
 
     // Squaring step: Square the convolved signal to emphasize larger values
     std::vector<double> squared_signal(convolved_signal.size());
-    std::transform(convolved_signal.begin(), convolved_signal.end(), squared_signal.begin(),
-                   [](double val) { return val * val; });
+    std::transform(convolved_signal.begin(), convolved_signal.end(), squared_signal.begin(),[](double val) { return val * val; });
 
     // Moving window integration: Smooth the signal using a moving average
     if (pan_tompkins_window_length == 0) {
@@ -175,8 +173,7 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
     }
     std::vector<double> integrated_signal(squared_signal.size() - pan_tompkins_window_length + 1);
     for (size_t i = 0; i < integrated_signal.size(); ++i) {
-        integrated_signal[i] = std::accumulate(squared_signal.begin() + i,
-                                               squared_signal.begin() + i + pan_tompkins_window_length, 0.0);
+        integrated_signal[i] = std::accumulate(squared_signal.begin() + i,squared_signal.begin() + i + pan_tompkins_window_length, 0.0);
     }
 
     
