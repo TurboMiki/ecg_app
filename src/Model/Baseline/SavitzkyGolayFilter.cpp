@@ -24,7 +24,7 @@ Signal SavitzkyGolayFilter::applyFilter(const Signal& inputSignal) const {
     newY.reserve(oldY.size());
     
     //For the first few points, just copy the original values
-    int halfWindow = filterLength / 2;
+    int halfWindow = this->filterLength;
     for (int i = 0; i < halfWindow; i++) {
         newY.push_back(oldY[i]);
     }

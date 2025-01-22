@@ -128,7 +128,7 @@
            <item>
             <widget class="QPushButton" name="btnHRV_1">
              <property name="text">
-              <string>HRV_1</string>
+              <string>HRV Parameters</string>
              </property>
             </widget>
            </item>
