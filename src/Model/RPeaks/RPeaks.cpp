@@ -179,31 +179,28 @@ bool RPeaks::panTompkins(const std::vector<double>& signal, std::vector<int>& r_
                                                squared_signal.begin() + i + pan_tompkins_window_length, 0.0);
     }
 
-    
     double max_val = *std::max_element(integrated_signal.begin(), integrated_signal.end());
     double mean_val = std::accumulate(integrated_signal.begin(), integrated_signal.end(), 0.0) / integrated_signal.size();
     if (pan_tompkins_threshold == 0) {
         pan_tompkins_threshold = 0.018; 
     }
-   
+
     // Peak detection: Identify local maxima above the threshold
-    std::vector<int> all_peaks; // Tymczasowy wektor na wszystkie załamki
+    std::vector<int> all_peaks;
     for (size_t i = 1; i < integrated_signal.size() - 1; ++i) {
-        if (integrated_signal[i] > pan_tompkins_threshold && integrated_signal[i] > integrated_signal[i - 1] &&
+        if (integrated_signal[i] > pan_tompkins_threshold &&
+            integrated_signal[i] > integrated_signal[i - 1] &&
             integrated_signal[i] > integrated_signal[i + 1]) {
             all_peaks.push_back(i); 
         }
     }
 
-    
-    for (size_t i = 1; i < all_peaks.size(); i += 2) {
-        r_peaks.push_back(all_peaks[i]);
-    }
+    // Filter peaks to keep only prominent ones
+    r_peaks = filterPeaks(all_peaks, integrated_signal, static_cast<int>(0.2 * signal_frequency));
 
     return true;
-
-
 }
+
 
 
 
